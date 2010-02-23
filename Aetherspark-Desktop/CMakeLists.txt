@@ -22,11 +22,17 @@ ADD_DEFINITIONS(${QT_DEFINITIONS})
 FIND_PACKAGE(Boost 1.40)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
+#Set up Qt Meta-Object Compiler sources
+SET(library_MOD_HEADERS
+	include/AEVideoWidget.h
+)
+QT4_WRAP_CPP(library_MOD_SOURCES ${library_MOC_HEADERS})
+
 #Create tagets
-ADD_LIBRARY(aedesktop SHARED ${library_sources})
+ADD_LIBRARY(aedesktop SHARED ${library_sources} ${library_MOD_SOURCES})
 ADD_EXECUTABLE(Aetherspark main.cpp)
 
 #Specify linkage
-TARGET_LINK_LIBRARIES(aedesktop aerecognition)
+TARGET_LINK_LIBRARIES(aedesktop aerecognition ${QT_LIBRARIES})
 TARGET_LINK_LIBRARIES(Aetherspark aedesktop)
 
