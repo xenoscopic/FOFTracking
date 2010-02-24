@@ -23,6 +23,7 @@ namespace Aetherspark
 				~AETrackingObject();
 				
 				CvPoint2D32f center();
+				bool lost();
 				
 			private:
 				void calculateMovement(IplImage *grey, IplImage *prevGrey, IplImage *pyramid, IplImage *prevPyramid, int flags);
@@ -34,6 +35,7 @@ namespace Aetherspark
 				CvPoint2D32f _center;
 				char *_status;
 				int _count;
+				bool _lost;
 		};
 		
 		typedef boost::shared_ptr<AETrackingObject> AETrackingObjectRef;

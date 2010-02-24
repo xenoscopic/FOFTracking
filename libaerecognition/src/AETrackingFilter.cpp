@@ -1,18 +1,22 @@
 #include "AETrackingFilter.h"
 
 #include <cstdio>
+#include <cmath>
 
 using namespace std;
 using namespace Aetherspark::ImageProcessing;
 
 #define N_FEATURE_TRACK 35
-#define MIN_DIST 10
+#define MIN_FEAT_DIST 10
+#define MIN_OBJECT_DIST 200
 //As defined in the Kolsch/Turk paper (flocks of features)
 #define K_FOF 3
 #define FEATURE_QUALITY 0.01
 #define WIN_SIZE 10
+#define MIN_AREA 40000
 
-AETrackingObject::AETrackingObject(IplImage *grey, CvRect roi)
+AETrackingObject::AETrackingObject(IplImage *grey, CvRect roi) :
+_lost(false)
 {	
 	printf("New tracking object\n");
 	fflush(stdout);
@@ -24,8 +28,8 @@ AETrackingObject::AETrackingObject(IplImage *grey, CvRect roi)
 	//Make a small copy of the grey ROI because cvGoodFeaturesToTrack doesn't support ROI
 	IplImage *greyCopy = cvCreateImage(cvGetSize(grey), grey->depth, grey->nChannels);
 	cvCopy(grey, greyCopy, NULL);
-	IplImage *eig = cvCreateImage(cvGetSize(greyCopy), 32, 1);
-	IplImage *temp = cvCreateImage(cvGetSize(greyCopy), 32, 1);
+	IplImage *eig = cvCreateImage(cvGetSize(greyCopy), IPL_DEPTH_32F, 1);
+	IplImage *temp = cvCreateImage(cvGetSize(greyCopy), IPL_DEPTH_32F, 1);
 	
 	//Allocate our point buffers
 	_points[0] = (CvPoint2D32f*)cvAlloc(N_FEATURE_TRACK*K_FOF*sizeof(CvPoint2D32f));
@@ -34,10 +38,8 @@ AETrackingObject::AETrackingObject(IplImage *grey, CvRect roi)
 	
 	//Find good features to track
 	_count = N_FEATURE_TRACK*K_FOF;
-	printf("Finding features with %p, %p, %p, %p, %p, %i\n", greyCopy, eig, temp, _points[0], &_count, _count);
-	fflush(stdout);
 	cvGoodFeaturesToTrack(greyCopy, eig, temp, _points[0], &_count, FEATURE_QUALITY,
-		MIN_DIST, NULL, 3, 0, 0.04);
+		MIN_FEAT_DIST, NULL, 3, 0, 0.04);
 	cvFindCornerSubPix(greyCopy, _points[0], _count, cvSize(WIN_SIZE, WIN_SIZE), cvSize(-1, -1),
 		cvTermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, 20, 0.03));
 	
@@ -70,6 +72,11 @@ AETrackingObject::~AETrackingObject()
 CvPoint2D32f AETrackingObject::center()
 {
 	return _center;
+}
+
+bool AETrackingObject::lost()
+{
+	return _lost;
 }
 
 void AETrackingObject::calculateMovement(IplImage *grey, IplImage *prevGrey, IplImage *pyramid, IplImage *prevPyramid, int flags)
@@ -186,7 +193,13 @@ void AETrackingFilter::processImage(IplImage *origImg, IplImage *newImg, AEImage
 	{
 		(*it)->calculateMovement(_grey, _prevGrey, _pyramid, _prevPyramid, _pyramidFlags);
 		_pyramidFlags |= CV_LKFLOW_PYR_B_READY; //Current frame pyramid already calculated, no need to redo
-		//TODO: Add object removal
+		
+		if((*it)->lost())
+		{
+			it = _objects.erase(it);
+			it--; //This will be pointing at the element that was next, so decrement before incrementing
+			continue;
+		}
 		
 		//Draw a green dot
 		cvCircle(newImg, cvPointFrom32f((*it)->center()), 3, CV_RGB(0,255,0), -1, 8, 0);
@@ -224,20 +237,57 @@ void AETrackingFilter::identifyTrackingCandidates(IplImage *origImg)
 										 cvSize(30, 30));
 	//Loop objects
 	int i;
+	bool goodCandidate;
 	for(i = 0; i < ((objects != NULL) ? objects->total : 0); i++)
 	{
-		//Record the rectangle
 		_candidates.push_back(*((CvRect*)cvGetSeqElem(objects, i)));
 	}
+}
+
+CvPoint2D32f rectCenter(CvRect rect)
+{
+	CvPoint2D32f ret;
+	ret.x = rect.x + (float)rect.width/2;
+	ret.y = rect.y + (float)rect.height/2;
+	return ret;
+}
+
+float euclideanDistance(CvPoint2D32f x0, CvPoint2D32f x1)
+{
+	return sqrt(pow(x1.x - x0.x, 2) + pow(x1.y - x0.y, 2));
 }
 
 void AETrackingFilter::filterAndInitializeCandidates(IplImage *grey)
 {
 	list<CvRect>::iterator it;
+	list<AETrackingObjectRef>::iterator oit;
 	
 	//Loop over candidates
+	bool doContinue;
 	for(it = _candidates.begin(); it != _candidates.end(); it++)
 	{
+		//Make sure the new object isn't too close to the old one
+		doContinue = false;
+		CvPoint2D32f center = rectCenter(*it);
+		for(oit = _objects.begin(); oit != _objects.end(); oit++)
+		{
+			if(euclideanDistance((*oit)->center(), center) < MIN_OBJECT_DIST)
+			{
+				doContinue = true;
+				break;
+			}
+		}
+		if(doContinue)
+		{
+			continue;
+		}
+		
+		//Make sure the match is big enough
+		if((it->width * it->height) < MIN_AREA)
+		{
+			continue;
+		}
+		
 		//For now just assume the match is good
 		_objects.push_back(AETrackingObjectRef(new AETrackingObject(grey, *it)));
 	}

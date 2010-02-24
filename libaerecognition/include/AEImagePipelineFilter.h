@@ -1,5 +1,7 @@
 #pragma once
 
+#define CV_NO_BACKWARD_COMPATIBILITY
+
 #include <opencv/cv.h>
 #include <boost/shared_ptr.hpp>
 
