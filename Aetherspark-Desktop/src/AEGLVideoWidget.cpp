@@ -1,4 +1,5 @@
 #include "AEGLVideoWidget.h"
+#include <cstdio>
 
 using namespace Aetherspark::Desktop;
 
@@ -33,9 +34,7 @@ AEGLVideoWidget::~AEGLVideoWidget()
 }
 
 void AEGLVideoWidget::initializeGL()
-{
-	
-	
+{	
 	//Initialize local buffers
 	GLuint tId[IMAGE_CACHE_SIZE];
 	glGenTextures(IMAGE_CACHE_SIZE, tId);
@@ -45,6 +44,7 @@ void AEGLVideoWidget::initializeGL()
 	{
 		_cvTextures[i].texId = tId[i];
 		_cvTextures[i].initialized = 0;
+		_cvTextures[i].texImage = NULL;
 	}
 	
 	//Create a display list for drawing our texture.
@@ -90,11 +90,11 @@ void AEGLVideoWidget::paintGL()
 	{
 		//See if we can kill an old image.
 		int killIndex = (_imageIndex + (IMAGE_CACHE_SIZE - 1)) % IMAGE_CACHE_SIZE;
-		struct cvTexture killTex =  _cvTextures[killIndex];
-		if(killTex.texImage != 0)
+		struct cvTexture killTex = _cvTextures[killIndex];
+		if(killTex.texImage != NULL)
 		{
 			cvReleaseImage(&(killTex.texImage));
-			_cvTextures[killIndex].texImage = 0;
+			_cvTextures[killIndex].texImage = NULL;
 			_cvTextures[killIndex].initialized = 0;
 		}
 
@@ -128,7 +128,7 @@ void AEGLVideoWidget::updateImage()
 	//Make a copy of the frame for our own purposes
 	//and convert color.
 	IplImage *copy = cvCloneImage(frame);
-	cvCvtColor(frame, copy, CV_BGR2RGB);
+	cvCvtColor(copy, copy, CV_BGR2RGB);
 	
 	//Write the image into our buffer, it will take responsibility
 	//for deallocation
