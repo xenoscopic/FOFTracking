@@ -16,7 +16,6 @@ namespace Aetherspark
 		
 			private:
 				//Qt GUI controls
-				QVBoxLayout *_layout;
 				AEVideoWidget *_video;
 		};
 	}

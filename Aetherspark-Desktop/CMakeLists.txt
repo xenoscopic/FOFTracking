@@ -14,6 +14,9 @@ INCLUDE_DIRECTORIES(${Aetherspark-Desktop_SOURCE_DIR}/Aetherspark-Desktop/includ
 INCLUDE_DIRECTORIES(${Aetherspark-Desktop_SOURCE_DIR}/libaerecognition/include)
 
 #Add Qt libraries/include directories
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	SET(QT_QMAKE_EXECUTABLE qmake-mac)
+ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 FIND_PACKAGE(Qt4 REQUIRED)
 INCLUDE(${QT_USE_FILE})
 ADD_DEFINITIONS(${QT_DEFINITIONS})
@@ -23,16 +26,16 @@ FIND_PACKAGE(Boost 1.40)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
 #Set up Qt Meta-Object Compiler sources
-SET(library_MOD_HEADERS
+SET(library_MOC_HEADERS
 	include/AEVideoWidget.h
 )
-QT4_WRAP_CPP(library_MOD_SOURCES ${library_MOC_HEADERS})
+QT4_WRAP_CPP(library_MOC_SOURCES ${library_MOC_HEADERS})
 
 #Create tagets
-ADD_LIBRARY(aedesktop SHARED ${library_sources} ${library_MOD_SOURCES})
+ADD_LIBRARY(aedesktop SHARED ${library_sources} ${library_MOC_SOURCES})
 ADD_EXECUTABLE(Aetherspark main.cpp)
 
 #Specify linkage
 TARGET_LINK_LIBRARIES(aedesktop aerecognition ${QT_LIBRARIES})
-TARGET_LINK_LIBRARIES(Aetherspark aedesktop)
+TARGET_LINK_LIBRARIES(Aetherspark aedesktop ${QT_LIBRARIES})
 

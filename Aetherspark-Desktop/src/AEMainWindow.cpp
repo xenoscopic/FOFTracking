@@ -4,9 +4,8 @@ using namespace Aetherspark::Desktop;
 
 AEMainWindow::AEMainWindow(QWidget *parent) : QMainWindow(parent)
 {
-	_layout = new QVBoxLayout();
 	_video = new AEVideoWidget();
-	_layout->addWidget(_video);
-	setLayout(_layout);
+	setCentralWidget(_video);
 	resize(500, 400);
 }
+

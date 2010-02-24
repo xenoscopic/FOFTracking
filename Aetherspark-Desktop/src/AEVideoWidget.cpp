@@ -11,11 +11,12 @@ AEVideoWidget::AEVideoWidget(QWidget *parent) : QWidget(parent)
 	setLayout(_layout); //Parent will take ownership of layout
 	
 	//Set up the capture
-	_capture = cvCaptureFromCAM(-1); //TODO: Add camera selection
+	_capture = cvCaptureFromCAM(0); //TODO: Add camera selection
 	
 	//Create shared image buffers
 	IplImage *sampleFrame = cvQueryFrame(_capture);
-	_image = QImage(QSize(sampleFrame->width, sampleFrame->height), QImage::Format_RGB888);
+	_image = QImage(QSize(sampleFrame->width, sampleFrame->height), 
+					QImage::Format_RGB888);
 	_cvImage = cvCreateImageHeader(cvSize(_image.width(), _image.height()),
 									IPL_DEPTH_8U,
 									3);

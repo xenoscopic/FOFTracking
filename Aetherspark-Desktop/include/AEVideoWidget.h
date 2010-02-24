@@ -7,7 +7,8 @@
 #include <QTimer>
 
 #include <opencv/cv.h>
-#include <opencv/highgui.h>
+#include <opencv/highgui.h> //CvCapture functions are declared here for some
+							//reason.
 
 namespace Aetherspark
 {
