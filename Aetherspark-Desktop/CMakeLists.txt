@@ -18,8 +18,10 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	SET(QT_QMAKE_EXECUTABLE qmake-mac)
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 FIND_PACKAGE(Qt4 REQUIRED)
+SET(QT_USE_QTOPENGL TRUE) #Needed for QGLWidget
 INCLUDE(${QT_USE_FILE})
 ADD_DEFINITIONS(${QT_DEFINITIONS})
+INCLUDE_DIRECTORIES(${QT_INCLUDES})
 
 #Find Boost C++ libraries
 FIND_PACKAGE(Boost 1.40)
@@ -28,6 +30,7 @@ INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 #Set up Qt Meta-Object Compiler sources
 SET(library_MOC_HEADERS
 	include/AEVideoWidget.h
+	include/AEGLVideoWidget.h
 )
 QT4_WRAP_CPP(library_MOC_SOURCES ${library_MOC_HEADERS})
 

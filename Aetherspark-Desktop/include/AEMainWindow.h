@@ -1,9 +1,16 @@
 #pragma once
 
+//Comment out to use the standard pixmap-based rendering
+#define USE_OPENGL_VIDEO
+
 #include <QWidget>
 #include <QMainWindow>
 #include <QVBoxLayout>
+#ifdef USE_OPENGL_VIDEO
+#include "AEGLVideoWidget.h"
+#else
 #include "AEVideoWidget.h"
+#endif
 
 namespace Aetherspark
 {
@@ -16,7 +23,11 @@ namespace Aetherspark
 		
 			private:
 				//Qt GUI controls
+				#ifdef USE_OPENGL_VIDEO
+				AEGLVideoWidget *_video;
+				#else
 				AEVideoWidget *_video;
+				#endif
 		};
 	}
 }
