@@ -9,12 +9,12 @@ _filtersOn(true)
 
 }
 
-void AEImageProcessingPipeline::AddFilter(AEImagePipelineFilterRef filter)
+void AEImageProcessingPipeline::addFilter(AEImagePipelineFilterRef filter)
 {
 	_filters.push_back(filter);
 }
 
-void AEImageProcessingPipeline::InsertFilter(AEImagePipelineFilterRef filter, unsigned long filterIndex) throw(out_of_range)
+void AEImageProcessingPipeline::insertFilter(AEImagePipelineFilterRef filter, unsigned long filterIndex) throw(out_of_range)
 {
 	if(filterIndex > _filters.size())
 	{
@@ -23,7 +23,7 @@ void AEImageProcessingPipeline::InsertFilter(AEImagePipelineFilterRef filter, un
 	_filters.insert(_filters.begin() + filterIndex, filter);
 }
 
-void AEImageProcessingPipeline::RemoveFilter(unsigned long filterIndex) throw(out_of_range)
+void AEImageProcessingPipeline::removeFilter(unsigned long filterIndex) throw(out_of_range)
 {
 	if(filterIndex >= _filters.size())
 	{
@@ -32,12 +32,12 @@ void AEImageProcessingPipeline::RemoveFilter(unsigned long filterIndex) throw(ou
 	_filters.erase(_filters.begin() + filterIndex);
 }
 
-void AEImageProcessingPipeline::RemoveAllFilters()
+void AEImageProcessingPipeline::removeAllFilters()
 {
 	_filters.clear();
 }
 
-void AEImageProcessingPipeline::ToggleFilters(bool on)
+void AEImageProcessingPipeline::toggleFilters(bool on)
 {
 	_filtersOn = on;
 }

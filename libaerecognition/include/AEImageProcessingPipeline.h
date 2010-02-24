@@ -15,11 +15,11 @@ namespace Aetherspark
 			public:
 				AEImageProcessingPipeline();
 			
-				void AddFilter(AEImagePipelineFilterRef filter);
-				void InsertFilter(AEImagePipelineFilterRef filter, unsigned long filterIndex) throw(std::out_of_range);
-				void RemoveFilter(unsigned long filterIndex) throw(std::out_of_range);
-				void RemoveAllFilters();
-				void ToggleFilters(bool on);
+				void addFilter(AEImagePipelineFilterRef filter);
+				void insertFilter(AEImagePipelineFilterRef filter, unsigned long filterIndex) throw(std::out_of_range);
+				void removeFilter(unsigned long filterIndex) throw(std::out_of_range);
+				void removeAllFilters();
+				void toggleFilters(bool on);
 				
 				IplImage* processImage(IplImage *img);
 		

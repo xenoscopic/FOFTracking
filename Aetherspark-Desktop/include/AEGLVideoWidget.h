@@ -7,6 +7,8 @@
 #include <opencv/cv.h>
 #include <opencv/highgui.h> //CvCapture functions are declared here for some
 							//reason.
+							
+#include "AEImageProcessingPipeline.h"
 
 #define IMAGE_CACHE_SIZE 3
 
@@ -28,6 +30,10 @@ namespace Aetherspark
 			public:
 				AEGLVideoWidget(QWidget *parent = NULL);
 				~AEGLVideoWidget();
+				
+				Aetherspark::ImageProcessing::AEImageProcessingPipeline* pipeline();
+				//Takes ownership of pipeline
+				void setPipeline(Aetherspark::ImageProcessing::AEImageProcessingPipeline *pipeline = NULL);
 			
 			protected:
 				void initializeGL();
@@ -50,6 +56,9 @@ namespace Aetherspark
 				int _imageIndex;
 				struct cvTexture _cvTextures[IMAGE_CACHE_SIZE];
 				GLuint _rectList;
+				
+				//Image pipeline
+				Aetherspark::ImageProcessing::AEImageProcessingPipeline *_pipeline;
 		};
 	}
 }

@@ -1,7 +1,7 @@
 #include "AEGLVideoWidget.h"
-#include <cstdio>
 
 using namespace Aetherspark::Desktop;
+using namespace Aetherspark::ImageProcessing;
 
 //Apparently this method has been removed or renamed or something
 void gluPerspective(GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble zFar)
@@ -31,6 +31,26 @@ AEGLVideoWidget::~AEGLVideoWidget()
 {
 	//Get rid of the capture
 	cvReleaseCapture(&_capture);
+	
+	//Destroy the pipeline
+	if(_pipeline != NULL)
+	{
+		delete _pipeline;
+	}
+}
+
+AEImageProcessingPipeline* AEGLVideoWidget::pipeline()
+{
+	return _pipeline;
+}
+
+void AEGLVideoWidget::setPipeline(AEImageProcessingPipeline *pipeline)
+{
+	if(_pipeline != NULL)
+	{
+		delete _pipeline;
+	}
+	_pipeline = pipeline;
 }
 
 void AEGLVideoWidget::initializeGL()
@@ -123,11 +143,22 @@ void AEGLVideoWidget::updateImage()
 {
 	//Grab the frame which is stored in a static buffer
 	//which we don't need to release
+	//TODO: This is extremely slow.  We may want to look into methods
+	//of speeding it up or adopt platform-native methods for each of
+	//Mac OS X, Linux, and Windows.
 	IplImage *frame = cvQueryFrame(_capture);
 	
 	//Make a copy of the frame for our own purposes
 	//and convert color.
-	IplImage *copy = cvCloneImage(frame);
+	IplImage *copy;
+	if(_pipeline != NULL)
+	{
+		copy = _pipeline->processImage(frame);
+	}
+	else
+	{
+		copy = cvCloneImage(frame);
+	}
 	cvCvtColor(copy, copy, CV_BGR2RGB);
 	
 	//Write the image into our buffer, it will take responsibility

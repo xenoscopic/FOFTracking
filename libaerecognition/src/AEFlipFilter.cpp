@@ -11,13 +11,13 @@ AEFlipFilter::AEFlipFilter(AECVFlipMode mode)
 		//Flip horizontally (around y-axis)
 		_flipMode = 1;
 	}
-	if((mode & AECVFlipModeVertical)
+	else if((mode & AECVFlipModeVertical)
 		&& !(mode & AECVFlipModeHorizontal))
 	{
 		//Flip vertically (around x-axis)
 		_flipMode = 0;
 	}
-	if((mode & AECVFlipModeHorizontal)
+	else if((mode & AECVFlipModeHorizontal)
 		&& (mode & AECVFlipModeVertical))
 	{
 		//Flip both
