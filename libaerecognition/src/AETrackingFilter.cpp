@@ -3,7 +3,24 @@
 using namespace std;
 using namespace Aetherspark::ImageProcessing;
 
-AETrackingFilter::AETrackingFilter(string cascadePath) throw(invalid_argument)
+AETrackingObject::AETrackingObject(IplImage *origImg)
+{
+	
+}
+
+AETrackingObject::~AETrackingObject()
+{
+	
+}
+
+void AETrackingObject::calculateMovement(IplImage *prevImg, IplImage *currImg)
+{
+	
+}
+
+AETrackingFilter::AETrackingFilter(string cascadePath, unsigned identFrameSkip) throw(invalid_argument) :
+_frameIndex(0),
+_identFrameMod(identFrameSkip + 1)
 {
 	//Load the classifier cascade
 	_cascade = (CvHaarClassifierCascade*)cvLoad(cascadePath.c_str(), 
@@ -33,10 +50,19 @@ AETrackingFilter::~AETrackingFilter()
 
 void AETrackingFilter::processImage(IplImage *origImg, IplImage *newImg, AEImageProcessingPipeline *pipeline)
 {
-	//Boilerplate variables
-	CvPoint pt1, pt2;
-	int i;
+	_frameIndex = (_frameIndex + 1) % _identFrameMod;
+	if(_frameIndex == 0)
+	{
+		//Check for any new objects that may have entered the frame
+		identifyTrackingCandidates(origImg);
+		filterAndInitializeCandidates(origImg);
+	}
+	
+	
+}
 
+void AETrackingFilter::identifyTrackingCandidates(IplImage *origImg)
+{
 	//Clear the memory storage
 	cvClearMemStorage(_storage);
 
@@ -49,19 +75,30 @@ void AETrackingFilter::processImage(IplImage *origImg, IplImage *newImg, AEImage
 										 0,
 										 cvSize(30, 30));
 	//Loop objects
+	int i;
 	for(i = 0; i < ((objects != NULL) ? objects->total : 0); i++)
 	{
-		//Create a new rectangle for drawing the object
-		CvRect *r = (CvRect*)cvGetSeqElem(objects, i);
-
-		//Find the dimensions of the face
-		pt1.x = r->x;
-		pt2.x = r->x + r->width;
-		pt1.y = r->y;
-		pt2.y = r->y + r->height;
-
-		//Draw the rectangle
-		cvRectangle(newImg, pt1, pt2, CV_RGB(255,0,0), 3, 8, 0);
+		//Record the rectangle
+		_candidates.push_back(*((CvRect*)cvGetSeqElem(objects, i)));
 	}
 }
 
+void AETrackingFilter::filterAndInitializeCandidates(IplImage *origImg)
+{
+	list<CvRect>::iterator it;
+	
+	//Loop over candidates
+	for(it = _candidates.begin(); it != _candidates.end(); it++)
+	{
+		//Focus on the region of interest
+		cvSetImageROI(origImg, *it);
+		
+		//For now just assume the match is good
+		_objects.push_back(AETrackingObjectRef(new AETrackingObject(origImg)));
+		
+		//Reset the ROI
+		cvResetImageROI(origImg);
+	}
+	
+	_candidates.clear();
+}

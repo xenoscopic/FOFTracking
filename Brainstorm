@@ -1,0 +1,8 @@
+Tracking Algorithm Outline:
+	Parameters: N, how often to check for haar matches
+
+	if(frameIndex % N == 0):
+		Identify new Haar matches
+		Setup features for new haar matches with FoF alg. initialization
+	
+	run normal FoF tracking alg
