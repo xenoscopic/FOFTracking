@@ -19,14 +19,13 @@ namespace Aetherspark
 			friend class AETrackingFilter;
 			
 			public:
-				//ROI will already be set when this is called
-				AETrackingObject(IplImage *origImg);
+				AETrackingObject(IplImage *grey, CvRect roi);
 				~AETrackingObject();
 				
 			private:
-				void calculateMovement(IplImage *prevImg, IplImage *currImg);
+				void calculateMovement(IplImage *grey, IplImage *prevGrey, IplImage *pyramid, IplImage *prevPyramid, int flags);
 				
-				
+				CvPoint2D32f* _points[2];
 		};
 		
 		typedef boost::shared_ptr<AETrackingObject> AETrackingObjectRef;
@@ -46,14 +45,26 @@ namespace Aetherspark
 				void identifyTrackingCandidates(IplImage *origImg);
 				//Looks at the candidate lists and filters it down, then creates a tracking
 				//feature set for all remaining objects.
-				void filterAndInitializeCandidates(IplImage *origImg);
+				void filterAndInitializeCandidates(IplImage *grey);
 				
+				//Index trackers
 				unsigned _frameIndex;
 				unsigned _identFrameMod;
 				
+				//Haar matching storage
 				CvMemStorage *_storage;
 				CvHaarClassifierCascade *_cascade;
 				
+				//Tracking buffers
+				bool _initialized;
+				IplImage *_grey;
+				IplImage *_prevGrey;
+				IplImage *_pyramid;
+				IplImage *_prevPyramid;
+				IplImage *_swapBuffer; //Never initialized, just used for CV_SWAP
+				int _pyramidFlags; //Tell cvCalcOpticalFlowPyrLK which pyramids are already calculated
+				
+				//Tracking objects
 				std::list<CvRect> _candidates;
 				std::list<AETrackingObjectRef> _objects;
 		};
