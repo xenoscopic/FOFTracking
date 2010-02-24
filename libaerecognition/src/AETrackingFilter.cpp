@@ -1,5 +1,7 @@
 #include "AETrackingFilter.h"
 
+#include <cstdio>
+
 using namespace std;
 using namespace Aetherspark::ImageProcessing;
 
@@ -12,6 +14,8 @@ using namespace Aetherspark::ImageProcessing;
 
 AETrackingObject::AETrackingObject(IplImage *grey, CvRect roi)
 {	
+	printf("New tracking object\n");
+	fflush(stdout);
 	//Set the region of interest and work within that for identifying
 	//our tracking features
 	cvSetImageROI(grey, roi);
@@ -20,8 +24,8 @@ AETrackingObject::AETrackingObject(IplImage *grey, CvRect roi)
 	//Make a small copy of the grey ROI because cvGoodFeaturesToTrack doesn't support ROI
 	IplImage *greyCopy = cvCreateImage(cvGetSize(grey), grey->depth, grey->nChannels);
 	cvCopy(grey, greyCopy, NULL);
-	IplImage *eig = cvCreateImage(cvGetSize(grey), 32, 1);
-	IplImage *temp = cvCreateImage(cvGetSize(grey), 32, 1);
+	IplImage *eig = cvCreateImage(cvGetSize(greyCopy), 32, 1);
+	IplImage *temp = cvCreateImage(cvGetSize(greyCopy), 32, 1);
 	
 	//Allocate our point buffers
 	_points[0] = (CvPoint2D32f*)cvAlloc(N_FEATURE_TRACK*K_FOF*sizeof(CvPoint2D32f));
@@ -30,6 +34,8 @@ AETrackingObject::AETrackingObject(IplImage *grey, CvRect roi)
 	
 	//Find good features to track
 	_count = N_FEATURE_TRACK*K_FOF;
+	printf("Finding features with %p, %p, %p, %p, %p, %i\n", greyCopy, eig, temp, _points[0], &_count, _count);
+	fflush(stdout);
 	cvGoodFeaturesToTrack(greyCopy, eig, temp, _points[0], &_count, FEATURE_QUALITY,
 		MIN_DIST, NULL, 3, 0, 0.04);
 	cvFindCornerSubPix(greyCopy, _points[0], _count, cvSize(WIN_SIZE, WIN_SIZE), cvSize(-1, -1),

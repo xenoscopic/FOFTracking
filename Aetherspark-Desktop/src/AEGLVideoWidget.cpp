@@ -16,7 +16,8 @@ void gluPerspective(GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble zFa
 	glFrustum(xmin, xmax, ymin, ymax, zNear, zFar);
 }
 
-AEGLVideoWidget::AEGLVideoWidget(QWidget *parent) : QGLWidget(parent)
+AEGLVideoWidget::AEGLVideoWidget(QWidget *parent) : QGLWidget(parent),
+_pipeline(NULL)
 {
 	//Set up the capture
 	_capture = cvCaptureFromCAM(0); //TODO: Add camera selection
