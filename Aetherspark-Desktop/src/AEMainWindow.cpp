@@ -1,6 +1,7 @@
 #include "AEMainWindow.h"
 #include "AEImageProcessingPipeline.h"
 #include "AEFlipFilter.h"
+#include "AEHaarFilter.h"
 
 using namespace Aetherspark::Desktop;
 using namespace Aetherspark::ImageProcessing;
@@ -12,6 +13,7 @@ AEMainWindow::AEMainWindow(QWidget *parent) : QMainWindow(parent)
 	_video = new AEGLVideoWidget();
 	AEImageProcessingPipeline *pipeline = new AEImageProcessingPipeline();
 	pipeline->addFilter(AEImagePipelineFilterRef(new AEFlipFilter(AECVFlipModeHorizontal)));
+	pipeline->addFilter(AEImagePipelineFilterRef(new AEHaarFilter("/Users/jacob/five-cascade.xml")));
 	_video->setPipeline(pipeline);
 	
 	#else
