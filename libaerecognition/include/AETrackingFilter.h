@@ -28,7 +28,7 @@ namespace Aetherspark
 			private:
 				//Fills _points[0] up with N_FEATURE_TRACK good features.
 				//It uses the Kolsch-Turk criteria to select features.
-				void fillGoodFeatures(IplImage *orig, IplImage *grey, CvRect roi);
+				void fillGoodFeatures(IplImage *orig, IplImage *grey, CvRect roi, bool initial);
 				
 				//Recalculates center using LK optical-flow algorithm.
 				void calculateMovement(IplImage *orig, IplImage *grey, IplImage *prevGrey, IplImage *pyramid, IplImage *prevPyramid, int flags);

@@ -2,6 +2,7 @@
 
 #include <cstdio>
 #include <cmath>
+#include <algorithm>
 
 using namespace std;
 using namespace Aetherspark::ImageProcessing;
@@ -14,10 +15,29 @@ using namespace Aetherspark::ImageProcessing;
 #define MIN_OBJECT_DIST 200
 //As defined in the Kolsch-Turk paper (flocks of features)
 #define K_FOF 3
-#define FEATURE_QUALITY 0.01
+#define FEATURE_QUALITY 0.001
 #define WIN_SIZE 10
 //Minimum area for a Haar match
 #define MIN_AREA 20000
+
+CvPoint2D32f rectCenter(CvRect rect)
+{
+	CvPoint2D32f ret;
+	ret.x = rect.x + (float)rect.width/2;
+	ret.y = rect.y + (float)rect.height/2;
+	return ret;
+}
+
+float euclideanDistance(CvPoint2D32f x0, CvPoint2D32f x1)
+{
+	return sqrt(pow(x1.x - x0.x, 2) + pow(x1.y - x0.y, 2));
+}
+
+bool pointIsInRect(CvPoint2D32f point, CvRect rect)
+{
+	return ((point.x >= rect.x) && (point.x <= (rect.x + rect.width))
+		&& (point.y >= rect.y) && (point.y <= (rect.y + rect.height)));
+}
 
 AETrackingObject::AETrackingObject(IplImage *orig, IplImage *grey, CvRect roi) :
 _boundingBox(roi),
@@ -32,7 +52,7 @@ _lost(false)
 	_points[1] = (CvPoint2D32f*)cvAlloc(N_FEATURE_TRACK*K_FOF*sizeof(CvPoint2D32f));
 	_status = (char*)cvAlloc(N_FEATURE_TRACK*K_FOF*sizeof(char));
 	
-	fillGoodFeatures(orig, grey, roi);
+	fillGoodFeatures(orig, grey, roi, true);
 }
 
 AETrackingObject::~AETrackingObject()
@@ -53,7 +73,7 @@ bool AETrackingObject::lost()
 	return _lost;
 }
 
-void AETrackingObject::fillGoodFeatures(IplImage *orig, IplImage *grey, CvRect roi)
+void AETrackingObject::fillGoodFeatures(IplImage *orig, IplImage *grey, CvRect roi, bool initial)
 {
 	//Set the region of interest and work within that for identifying
 	//our tracking features
@@ -66,31 +86,44 @@ void AETrackingObject::fillGoodFeatures(IplImage *orig, IplImage *grey, CvRect r
 	IplImage *eig = cvCreateImage(cvGetSize(greyCopy), IPL_DEPTH_32F, 1);
 	IplImage *temp = cvCreateImage(cvGetSize(greyCopy), IPL_DEPTH_32F, 1);
 	
-	//Figure out how many features we need to identify
-	int tempCount = (N_FEATURE_TRACK - _count)*K_FOF;
-	
 	//Find good features to track
+	int tempCount = N_FEATURE_TRACK*K_FOF;
 	cvGoodFeaturesToTrack(greyCopy, eig, temp, _points[0], &tempCount, FEATURE_QUALITY,
 		MIN_FEAT_DIST, NULL, 3, 0, 0.04);
 	cvFindCornerSubPix(greyCopy, _points[0], tempCount, cvSize(WIN_SIZE, WIN_SIZE), cvSize(-1, -1),
 		cvTermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, 20, 0.03));
-	
-	printf("Found %i good features (%i, %i)\n", tempCount, roi.x, roi.y);
-	fflush(stdout);
+
+	if(initial)
+	{
+		printf("Found %i good features (%i, %i)\n", tempCount, roi.x, roi.y);
+		fflush(stdout);
+	}
 	
 	//Loop over the identified points and adjust them to ignore the ROI offset
-	for(int i = 0; i < tempCount; i++)
+	int i;
+	for(i = 0; i < tempCount; i++)
 	{
 		_points[0][i].x += roi.x;
 		_points[0][i].y += roi.y;
 	}
-	fflush(stdout);
 	
-	//TODO: Use color histogram to trim number of points
+	//TODO: Use color histogram to sort point rank
 	
-	
-	//Record the actual count
-	_count = tempCount;
+	//Fill in as many points as we need
+	if(!initial)
+	{
+		//This method is being called from calculateMovement, so
+		//we need to transfer the points from _points[0] to _points[1]
+		i = 0;
+		while((i < tempCount) && (_count < N_FEATURE_TRACK))
+		{
+			_points[1][_count++] = _points[0][i++];
+		}
+	}
+	else
+	{
+		_count = min(N_FEATURE_TRACK, tempCount);
+	}
 	
 	//Free up memory
 	cvReleaseImage(&greyCopy);
@@ -103,6 +136,13 @@ void AETrackingObject::fillGoodFeatures(IplImage *orig, IplImage *grey, CvRect r
 
 void AETrackingObject::calculateMovement(IplImage *orig, IplImage *grey, IplImage *prevGrey, IplImage *pyramid, IplImage *prevPyramid, int flags)
 {
+	if(_count == 0)
+	{
+		//We have no features to track on!
+		_lost = true;
+		return;
+	}
+	
 	//Calculate the optical flow
 	cvCalcOpticalFlowPyrLK(prevGrey, grey, prevPyramid, pyramid, _points[0], _points[1], _count, cvSize(WIN_SIZE, WIN_SIZE),
 		3, _status, 0, cvTermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, 20, 0.03), flags);
@@ -137,6 +177,23 @@ void AETrackingObject::calculateMovement(IplImage *orig, IplImage *grey, IplImag
 	_boundingBox.y = _center.x - (float)_boundingBox.height/2;
 	
 	//For each feature, check it against the Kolsch-Turk criteria
+	int p;
+	for(i = k = 0; i < _count; i++)
+	{
+		if(!pointIsInRect(_points[1][i], _boundingBox))
+		{
+			//Point has moved outside bounding box
+			continue;
+		}
+		
+		//TODO: Add min-distance check
+		
+		_points[1][k++] = _points[1][i];
+	}
+	_count = k;
+	
+	//Regenerate the missing points
+	fillGoodFeatures(orig, grey, _boundingBox, false);
 	
 	//Swap the point buffers
 	CV_SWAP(_points[0], _points[1], _swapBuffer);
@@ -270,19 +327,6 @@ void AETrackingFilter::identifyTrackingCandidates(IplImage *origImg)
 	{
 		_candidates.push_back(*((CvRect*)cvGetSeqElem(objects, i)));
 	}
-}
-
-CvPoint2D32f rectCenter(CvRect rect)
-{
-	CvPoint2D32f ret;
-	ret.x = rect.x + (float)rect.width/2;
-	ret.y = rect.y + (float)rect.height/2;
-	return ret;
-}
-
-float euclideanDistance(CvPoint2D32f x0, CvPoint2D32f x1)
-{
-	return sqrt(pow(x1.x - x0.x, 2) + pow(x1.y - x0.y, 2));
 }
 
 void AETrackingFilter::filterAndInitializeCandidates(IplImage *origImg, IplImage *grey)
