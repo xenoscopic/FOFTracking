@@ -37,6 +37,7 @@ namespace Aetherspark
 				//_points[1] will be the coordinates in grey (which will be calculated)
 				CvPoint2D32f* _points[2];
 				CvPoint2D32f *_swapBuffer;
+				CvHistogram *_hist;
 				CvPoint2D32f _center;
 				CvRect _boundingBox;
 				char *_status;

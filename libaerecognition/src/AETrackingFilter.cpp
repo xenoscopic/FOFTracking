@@ -40,6 +40,7 @@ bool pointIsInRect(CvPoint2D32f point, CvRect rect)
 }
 
 AETrackingObject::AETrackingObject(IplImage *orig, IplImage *grey, CvRect roi) :
+_hist(NULL),
 _boundingBox(roi),
 _count(0),
 _lost(false)
@@ -61,6 +62,9 @@ AETrackingObject::~AETrackingObject()
 	cvFree((void**)(&(_points[0])));
 	cvFree((void**)(&(_points[1])));
 	cvFree((void**)(&_status));
+	
+	//Release histogram
+	cvReleaseHist(&_hist);
 }
 
 CvPoint2D32f AETrackingObject::center()
@@ -78,6 +82,7 @@ void AETrackingObject::fillGoodFeatures(IplImage *orig, IplImage *grey, CvRect r
 	//Set the region of interest and work within that for identifying
 	//our tracking features
 	cvSetImageROI(grey, roi);
+	cvSetImageROI(orig, roi);
 	
 	//Boilerplate variables (cvGetSize respects ROI)
 	//Make a small copy of the grey ROI because cvGoodFeaturesToTrack doesn't support ROI
@@ -97,6 +102,9 @@ void AETrackingObject::fillGoodFeatures(IplImage *orig, IplImage *grey, CvRect r
 	{
 		printf("Found %i good features (%i, %i)\n", tempCount, roi.x, roi.y);
 		fflush(stdout);
+		
+		//Create hue histogram from initial image
+		
 	}
 	
 	//Loop over the identified points and adjust them to ignore the ROI offset
@@ -132,6 +140,7 @@ void AETrackingObject::fillGoodFeatures(IplImage *orig, IplImage *grey, CvRect r
 	
 	//Reset region of interest
 	cvResetImageROI(grey);
+	cvResetImageROI(orig);
 }
 
 void AETrackingObject::calculateMovement(IplImage *orig, IplImage *grey, IplImage *prevGrey, IplImage *pyramid, IplImage *prevPyramid, int flags)
@@ -288,6 +297,12 @@ void AETrackingFilter::processImage(IplImage *origImg, IplImage *newImg, AEImage
 		
 		//Draw a green dot
 		cvCircle(newImg, cvPointFrom32f((*it)->center()), 3, CV_RGB(0,255,0), -1, 8, 0);
+		
+		//Draw features
+		for(int i = 0; i < (*it)->_count; i++)
+		{
+			cvCircle(newImg, cvPointFrom32f((*it)->_points[0][i]), 3, CV_RGB(255,0,0), -1, 8, 0);
+		}
 	}
 	
 	//Determine if the previous frame pyramid has been calculated

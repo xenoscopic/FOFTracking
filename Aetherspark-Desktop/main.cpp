@@ -13,6 +13,8 @@ int main(int argc, char **argv)
 	AEMainWindow *mainWindow = new AEMainWindow();
 	mainWindow->setWindowTitle("QT OpenCV Sandbox");
 	mainWindow->show();
+	mainWindow->raise();
+	mainWindow->activateWindow();
 	
 	return app.exec();
 }
