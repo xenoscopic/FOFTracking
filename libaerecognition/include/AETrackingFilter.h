@@ -19,20 +19,26 @@ namespace Aetherspark
 			friend class AETrackingFilter;
 			
 			public:
-				AETrackingObject(IplImage *grey, CvRect roi);
+				AETrackingObject(IplImage *orig, IplImage *grey, CvRect roi);
 				~AETrackingObject();
 				
 				CvPoint2D32f center();
 				bool lost();
 				
 			private:
-				void calculateMovement(IplImage *grey, IplImage *prevGrey, IplImage *pyramid, IplImage *prevPyramid, int flags);
+				//Fills _points[0] up with N_FEATURE_TRACK good features.
+				//It uses the Kolsch-Turk criteria to select features.
+				void fillGoodFeatures(IplImage *orig, IplImage *grey, CvRect roi);
+				
+				//Recalculates center using LK optical-flow algorithm.
+				void calculateMovement(IplImage *orig, IplImage *grey, IplImage *prevGrey, IplImage *pyramid, IplImage *prevPyramid, int flags);
 				
 				//_points[0] will be the coordinates in prevGrey
 				//_points[1] will be the coordinates in grey (which will be calculated)
 				CvPoint2D32f* _points[2];
 				CvPoint2D32f *_swapBuffer;
 				CvPoint2D32f _center;
+				CvRect _boundingBox;
 				char *_status;
 				int _count;
 				bool _lost;
@@ -55,7 +61,7 @@ namespace Aetherspark
 				void identifyTrackingCandidates(IplImage *origImg);
 				//Looks at the candidate lists and filters it down, then creates a tracking
 				//feature set for all remaining objects.
-				void filterAndInitializeCandidates(IplImage *grey);
+				void filterAndInitializeCandidates(IplImage *origImg, IplImage *grey);
 				
 				//Index trackers
 				unsigned _frameIndex;
