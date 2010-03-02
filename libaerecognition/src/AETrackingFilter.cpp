@@ -8,7 +8,7 @@ using namespace std;
 using namespace Aetherspark::ImageProcessing;
 
 //Number of features to track
-#define N_FEATURE_TRACK 35
+#define N_FEATURE_TRACK 55
 //Minimum distance between features
 #define MIN_FEAT_DIST 10
 //Minimum distance between objects (to avoid dupes)
