@@ -263,7 +263,22 @@ void AETrackingObject::calculateMovement(IplImage *orig, IplImage *grey, IplImag
 			continue;
 		}
 		
-		//TODO: Add min-distance check
+		//Make sure this point is minDistance from all the ones
+		//before it.  If it is too close to the ones before it,
+		//then remove it because it will have a lower back-projection
+		//ranking than the point before it.
+		for(p = 0; p < k; p++)
+		{
+			if(euclideanDistance(_points[1][p], _points[1][i]) < MIN_FEAT_DIST)
+			{
+				break;
+			}
+		}
+		if(p != k)
+		{
+			//We found a point that was too close
+			continue;
+		}
 		
 		_points[1][k++] = _points[1][i];
 	}
@@ -437,16 +452,12 @@ void AETrackingFilter::filterAndInitializeCandidates(IplImage *origImg, IplImage
 		{
 			if(pointIsInRect(center, (*oit)->boundingBox()))
 			{
-				printf("Continuing here\n");
-				fflush(stdout);
 				doContinue = true;
 				break;
 			}
 			else
 			{
 				CvRect bBox = (*oit)->boundingBox();
-				printf("Point (%f, %f) was okay for %i x %i @ (%i, %i)\n", center.x, center.y, bBox.width, bBox.height, bBox.x, bBox.y);
-				fflush(stdout);
 			}
 		}
 		if(doContinue)
