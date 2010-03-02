@@ -5,7 +5,7 @@ using namespace Aetherspark::Capture;
 AECaptureDevice::AECaptureDevice()
 {
 	//Set up the capture
-	_capture = cvCaptureFromCAM(0)
+	_capture = cvCaptureFromCAM(0);
 }
 
 AECaptureDevice::~AECaptureDevice()
