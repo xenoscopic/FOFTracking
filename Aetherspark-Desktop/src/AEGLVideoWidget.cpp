@@ -1,6 +1,7 @@
 #include "AEGLVideoWidget.h"
 
 using namespace Aetherspark::Desktop;
+using namespace Aetherspark::Capture;
 using namespace Aetherspark::ImageProcessing;
 
 //Apparently this method has been removed or renamed or something
@@ -20,7 +21,7 @@ AEGLVideoWidget::AEGLVideoWidget(QWidget *parent) : QGLWidget(parent),
 _pipeline(NULL)
 {
 	//Set up the capture
-	_capture = cvCaptureFromCAM(0); //TODO: Add camera selection
+	_capture = new AECaptureDevice(); //TODO: Add camera selection
 	
 	//Set up timer (parent will destroy)
 	_updateTimer = new QTimer(this);
@@ -31,7 +32,7 @@ _pipeline(NULL)
 AEGLVideoWidget::~AEGLVideoWidget()
 {
 	//Get rid of the capture
-	cvReleaseCapture(&_capture);
+	delete _capture;
 	
 	//Destroy the pipeline
 	if(_pipeline != NULL)
@@ -142,12 +143,8 @@ void AEGLVideoWidget::paintGL()
 
 void AEGLVideoWidget::updateImage()
 {
-	//Grab the frame which is stored in a static buffer
-	//which we don't need to release
-	//TODO: This is extremely slow.  We may want to look into methods
-	//of speeding it up or adopt platform-native methods for each of
-	//Mac OS X, Linux, and Windows.
-	IplImage *frame = cvQueryFrame(_capture);
+	//Grab the frame.
+	IplImage *frame = _capture->captureFrame();
 	
 	//Make a copy of the frame for our own purposes
 	//and convert color.
@@ -155,11 +152,13 @@ void AEGLVideoWidget::updateImage()
 	if(_pipeline != NULL)
 	{
 		copy = _pipeline->processImage(frame);
+		cvReleaseImage(&frame);
 	}
 	else
 	{
-		copy = cvCloneImage(frame);
+		copy = frame;
 	}
+	
 	cvCvtColor(copy, copy, CV_BGR2RGB);
 	
 	//Write the image into our buffer, it will take responsibility

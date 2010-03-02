@@ -2,8 +2,25 @@
 
 using namespace Aetherspark::Capture;
 
-#define INPUT_WIDTH 320.0
-#define INPUT_HEIGHT 240.0
+#define INPUT_WIDTH 640.0
+#define INPUT_HEIGHT 480.0
+
+#import <QTKit/QTKit.h>
+
+//QT = QuickTime here, not Qt.
+@interface QTCapture : NSObject {
+	//Private members
+	NSAutoreleasePool *releasePool; //Used to remove objects QTKit creates
+	QTCaptureSession *captureSession;
+	QTCaptureDeviceInput *captureDeviceInput;
+	QTCaptureDecompressedVideoOutput *captureVideoOutput;
+	IplImage *frameHeader;
+	IplImage *frameBuffer;
+	BOOL initialized;
+}
+//Frame should be released by caller
+-(IplImage*)latestFrame;
+@end
 
 @implementation QTCapture
 
@@ -11,10 +28,14 @@ using namespace Aetherspark::Capture;
 {
 	if(self = [super init])
 	{
+		//Setup Autorelease Pool
+		releasePool = [[NSAutoreleasePool alloc] init];
+		
 		//Create the OpenCV image we'll use to handle the QT frame.
 		//We don't use the OpenCV creation functions because we're grabbing
 		//data out of Core Video
 		frameHeader = (IplImage*)malloc(sizeof(IplImage));
+		frameBuffer = cvCreateImage(cvSize(INPUT_WIDTH, INPUT_HEIGHT), IPL_DEPTH_8U, 3);
 		
 		//Load the QT video input
 		captureSession = [[QTCaptureSession alloc] init];
@@ -87,6 +108,8 @@ using namespace Aetherspark::Capture;
 	//will be a no-op if frameBuffer is null, which it will be
 	//by default.
 	cvReleaseImage(&frameBuffer);
+	
+	[releasePool drain];
 	[super dealloc];
 }
 
@@ -116,11 +139,7 @@ using namespace Aetherspark::Capture;
 	//Copy the data from the QT buffer into the local buffer
 	@synchronized(self)
 	{
-		if(!initialized)
-		{
-			frameBuffer = cvCreateImage(cvGetSize(frameHeader), IPL_DEPTH_8U, 3);
-		}
-		cvCopy(frameHeader, frameBuffer);
+		cvCvtColor(frameHeader, frameBuffer, CV_RGB2BGR);
 	}
 	
 	//Unlock the image data
@@ -141,17 +160,17 @@ using namespace Aetherspark::Capture;
 
 AECaptureDevice::AECaptureDevice()
 {
-	_capture = [[QTCapture alloc] init];
+	_capture = (void*)[[QTCapture alloc] init];
 }
 
 AECaptureDevice::~AECaptureDevice()
 {
-	[_capture release];
+	[((QTCapture*)_capture) release];
 }
 
 IplImage* AECaptureDevice::captureFrame()
 {
-	return [_capture latestFrame];
+	return [((QTCapture*)_capture) latestFrame];
 }
 
 

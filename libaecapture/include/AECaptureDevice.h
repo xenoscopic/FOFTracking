@@ -2,24 +2,6 @@
 
 #include <opencv/cv.h>
 
-#ifdef MACOSX
-#import <QTKit/QTKit.h>
-
-//QT = QuickTime here, not Qt.
-@interface QTCapture : NSObject {
-	//Private members
-	QTCaptureSession *captureSession;
-	QTCaptureDeviceInput *captureDeviceInput;
-	QTCaptureDecompressedVideoOutput *captureVideoOutput;
-	IplImage *frameHeader;
-	IplImage *frameBuffer;
-	BOOL initialized;
-}
-//Frame should be released by caller
--(IplImage*)latestFrame;
-@end
-#endif
-
 #ifdef LINUX
 #include <opencv/highgui.h> //CvCapture functions are declared here for some
 							//reason.
@@ -41,11 +23,12 @@ namespace Aetherspark
 				~AECaptureDevice();
 				
 				//The returned image should be released by the caller.
+				//It will be returned in BGR format, just like with highgui.
 				IplImage* captureFrame();
 				
 			private:
 				#ifdef MACOSX
-				QTCapture *_capture;
+				void *_capture; //This needs to be converted to a QTCapture
 				#endif
 				
 				#ifdef LINUX

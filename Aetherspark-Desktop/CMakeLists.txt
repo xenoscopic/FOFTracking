@@ -11,6 +11,7 @@
 #Set library source directories
 AUX_SOURCE_DIRECTORY(src library_sources)
 INCLUDE_DIRECTORIES(${Aetherspark-Desktop_SOURCE_DIR}/Aetherspark-Desktop/include)
+INCLUDE_DIRECTORIES(${Aetherspark-Desktop_SOURCE_DIR}/libaecapture/include)
 INCLUDE_DIRECTORIES(${Aetherspark-Desktop_SOURCE_DIR}/libaerecognition/include)
 
 #Add Qt libraries/include directories
@@ -39,6 +40,6 @@ ADD_LIBRARY(aedesktop SHARED ${library_sources} ${library_MOC_SOURCES})
 ADD_EXECUTABLE(Aetherspark main.cpp)
 
 #Specify linkage
-TARGET_LINK_LIBRARIES(aedesktop aerecognition ${QT_LIBRARIES})
+TARGET_LINK_LIBRARIES(aedesktop aerecognition aecapture ${QT_LIBRARIES})
 TARGET_LINK_LIBRARIES(Aetherspark aedesktop ${QT_LIBRARIES})
 

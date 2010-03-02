@@ -5,8 +5,8 @@
 #include <QTimer>
 
 #include <opencv/cv.h>
-#include <opencv/highgui.h> //CvCapture functions are declared here for some
-							//reason.
+
+#include "AECaptureDevice.h"
 							
 #include "AEImageProcessingPipeline.h"
 
@@ -47,7 +47,7 @@ namespace Aetherspark
 				void setImage(IplImage *img);
 				
 				//Capture source
-				CvCapture *_capture;
+				Aetherspark::Capture::AECaptureDevice *_capture;
 
 				//Update timer
 				QTimer *_updateTimer;
