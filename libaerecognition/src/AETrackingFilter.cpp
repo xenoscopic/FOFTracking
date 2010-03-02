@@ -206,6 +206,7 @@ void AETrackingObject::fillGoodFeatures(IplImage *orig, IplImage *grey, CvRect r
 				i++;
 				continue;
 			}
+			//Looks good, add the point.
 			_points[1][_count++] = _points[0][i++];
 		}
 		//Resort based on quality so that future removes
@@ -272,6 +273,17 @@ void AETrackingObject::calculateMovement(IplImage *orig, IplImage *grey, IplImag
 	_boundingBox.x = _center.x - (float)_boundingBox.width/2;
 	_boundingBox.y = _center.y - (float)_boundingBox.height/2;
 	
+	//If the box is now outside the image frame, mark the object as lost
+	CvSize iSize = cvGetSize(orig);
+	if((_boundingBox.x < 0)
+		|| (_boundingBox.y < 0)
+		|| ((_boundingBox.x + _boundingBox.width) > iSize.width)
+		|| ((_boundingBox.y + _boundingBox.height) > iSize.height))
+	{
+		_lost = true;
+		return;
+	}
+
 	//For each feature, check it against the Kolsch-Turk criteria
 	int p;
 	for(i = k = 0; i < _count; i++)
