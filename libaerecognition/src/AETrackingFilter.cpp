@@ -149,6 +149,8 @@ void AETrackingObject::fillGoodFeatures(IplImage *orig, IplImage *grey, CvRect r
 	cvSetImageCOI(hsvImage, 1); //Set COI to hue channel
 	cvCopy(hsvImage, hueImage);
 	cvSetImageCOI(hsvImage, 0); //Reset COI, probably not necessary
+	IplImage *backProjection = cvCreateImage(cvGetSize(hueImage), IPL_DEPTH_8U, 1);
+	cvCalcBackProject(&hueImage, backProjection, _hist);
 	
 	//Find good features to track
 	int tempCount = N_FEATURE_TRACK*K_FOF;
@@ -169,11 +171,8 @@ void AETrackingObject::fillGoodFeatures(IplImage *orig, IplImage *grey, CvRect r
 	//Use color histogram to sort point rank.
 	//Do this BEFORE adjusting for ROI, since hueImage
 	//will just be of ROI.
-	IplImage *backProjection = cvCreateImage(cvGetSize(hueImage), IPL_DEPTH_8U, 1);
-	cvCalcBackProject(&hueImage, backProjection, _hist);
 	HistogramSorter hSorter(backProjection);
 	sort(_points[0], _points[0] + tempCount, hSorter);
-	cvReleaseImage(&backProjection);
 	
 	//Loop over the identified points and adjust them to ignore the ROI offset
 	int i;
@@ -191,8 +190,27 @@ void AETrackingObject::fillGoodFeatures(IplImage *orig, IplImage *grey, CvRect r
 		i = 0;
 		while((i < tempCount) && (_count < N_FEATURE_TRACK))
 		{
+			//Make sure this point is far enough away from existing ones.
+			//This doesn't really take quality into account, but in order
+			//to do that, we'd have to sort after every add.
+			int p;
+			for(p = 0; p < _count; p++)
+			{
+				if(euclideanDistance(_points[0][i], _points[1][p]) < MIN_FEAT_DIST)
+				{
+					break;
+				}
+			}
+			if(p != _count)
+			{
+				i++;
+				continue;
+			}
 			_points[1][_count++] = _points[0][i++];
 		}
+		//Resort based on quality so that future removes
+		//will take it into account
+		sort(_points[1], _points[1] + _count, hSorter);
 	}
 	else
 	{
@@ -205,6 +223,7 @@ void AETrackingObject::fillGoodFeatures(IplImage *orig, IplImage *grey, CvRect r
 	cvReleaseImage(&temp);
 	cvReleaseImage(&hsvImage);
 	cvReleaseImage(&hueImage);
+	cvReleaseImage(&backProjection);
 	
 	//Reset region of interest
 	cvResetImageROI(grey);
