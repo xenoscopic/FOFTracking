@@ -20,6 +20,7 @@ using namespace Aetherspark::ImageProcessing;
 //Minimum area for a Haar match
 #define MIN_AREA 20000
 
+//Convenience methods/objects
 CvPoint2D32f rectCenter(CvRect rect)
 {
 	CvPoint2D32f ret;
@@ -39,6 +40,47 @@ bool pointIsInRect(CvPoint2D32f point, CvRect rect)
 		&& (point.y >= rect.y) && (point.y <= (rect.y + rect.height)));
 }
 
+class HistogramSorter
+{
+	public:
+		HistogramSorter(IplImage *backProjection) :
+		_backProjection(backProjection),
+		_iSize(cvGetSize(backProjection)) { }
+		
+		bool operator() (CvPoint2D32f i, CvPoint2D32f j)
+		{
+			//Convert to useful coordinates
+			CvPoint iPt = cleanPoint(cvPointFrom32f(i));
+			CvPoint jPt = cleanPoint(cvPointFrom32f(j));
+			
+			//Get the hue value for each channel from the image
+			int iHue = (int)cvGet2D(_backProjection, iPt.x, iPt.y).val[0];
+			int jHue = (int)cvGet2D(_backProjection, jPt.x, jPt.y).val[0];
+			
+			//Return this so that the points will be sorted in
+			//descending order
+			return iHue > jHue;
+		}
+		
+	private:
+		IplImage *_backProjection;
+		CvSize _iSize;
+		
+		CvPoint cleanPoint(CvPoint point)
+		{
+			//Check to make sure the conversion hasn't put them outside
+			//the image boundaries
+			CvPoint ret;
+			ret.x = max(0, point.x);
+			ret.x = min(_iSize.width - 1, ret.x);
+			ret.y = max(0, point.y);
+			ret.y = min(_iSize.height - 1, ret.y);
+			return ret;
+		}
+};
+
+//Actual class implementations
+
 AETrackingObject::AETrackingObject(IplImage *orig, IplImage *grey, CvRect roi) :
 _hist(NULL),
 _boundingBox(roi),
@@ -52,6 +94,12 @@ _lost(false)
 	_points[0] = (CvPoint2D32f*)cvAlloc(N_FEATURE_TRACK*K_FOF*sizeof(CvPoint2D32f));
 	_points[1] = (CvPoint2D32f*)cvAlloc(N_FEATURE_TRACK*K_FOF*sizeof(CvPoint2D32f));
 	_status = (char*)cvAlloc(N_FEATURE_TRACK*K_FOF*sizeof(char));
+	
+	//Create an empty hue histogram
+	int numBins = 256;
+	float hueRanges[] = {0, 181}; //Cover 180 degrees of hue
+	float *ranges[] = {hueRanges};
+	_hist = cvCreateHist(1, &numBins, CV_HIST_ARRAY, ranges, 1);
 	
 	fillGoodFeatures(orig, grey, roi, true);
 }
@@ -72,6 +120,11 @@ CvPoint2D32f AETrackingObject::center()
 	return _center;
 }
 
+CvRect AETrackingObject::boundingBox()
+{
+	return _boundingBox;
+}
+
 bool AETrackingObject::lost()
 {
 	return _lost;
@@ -90,6 +143,12 @@ void AETrackingObject::fillGoodFeatures(IplImage *orig, IplImage *grey, CvRect r
 	cvCopy(grey, greyCopy, NULL);
 	IplImage *eig = cvCreateImage(cvGetSize(greyCopy), IPL_DEPTH_32F, 1);
 	IplImage *temp = cvCreateImage(cvGetSize(greyCopy), IPL_DEPTH_32F, 1);
+	IplImage *hsvImage = cvCreateImage(cvGetSize(orig), IPL_DEPTH_8U, 3);
+	IplImage *hueImage = cvCreateImage(cvGetSize(orig), IPL_DEPTH_8U, 1);
+	cvCvtColor(orig, hsvImage, CV_BGR2HSV);
+	cvSetImageCOI(hsvImage, 1); //Set COI to hue channel
+	cvCopy(hsvImage, hueImage);
+	cvSetImageCOI(hsvImage, 0); //Reset COI, probably not necessary
 	
 	//Find good features to track
 	int tempCount = N_FEATURE_TRACK*K_FOF;
@@ -104,8 +163,17 @@ void AETrackingObject::fillGoodFeatures(IplImage *orig, IplImage *grey, CvRect r
 		fflush(stdout);
 		
 		//Create hue histogram from initial image
-		
+		cvCalcHist(&hueImage, _hist);
 	}
+	
+	//Use color histogram to sort point rank.
+	//Do this BEFORE adjusting for ROI, since hueImage
+	//will just be of ROI.
+	IplImage *backProjection = cvCreateImage(cvGetSize(hueImage), IPL_DEPTH_8U, 1);
+	cvCalcBackProject(&hueImage, backProjection, _hist);
+	HistogramSorter hSorter(backProjection);
+	sort(_points[0], _points[0] + tempCount, hSorter);
+	cvReleaseImage(&backProjection);
 	
 	//Loop over the identified points and adjust them to ignore the ROI offset
 	int i;
@@ -114,8 +182,6 @@ void AETrackingObject::fillGoodFeatures(IplImage *orig, IplImage *grey, CvRect r
 		_points[0][i].x += roi.x;
 		_points[0][i].y += roi.y;
 	}
-	
-	//TODO: Use color histogram to sort point rank
 	
 	//Fill in as many points as we need
 	if(!initial)
@@ -137,6 +203,8 @@ void AETrackingObject::fillGoodFeatures(IplImage *orig, IplImage *grey, CvRect r
 	cvReleaseImage(&greyCopy);
 	cvReleaseImage(&eig);
 	cvReleaseImage(&temp);
+	cvReleaseImage(&hsvImage);
+	cvReleaseImage(&hueImage);
 	
 	//Reset region of interest
 	cvResetImageROI(grey);
@@ -183,7 +251,7 @@ void AETrackingObject::calculateMovement(IplImage *orig, IplImage *grey, IplImag
 	
 	//Relocate the bounding box to center it on the median feature
 	_boundingBox.x = _center.x - (float)_boundingBox.width/2;
-	_boundingBox.y = _center.x - (float)_boundingBox.height/2;
+	_boundingBox.y = _center.y - (float)_boundingBox.height/2;
 	
 	//For each feature, check it against the Kolsch-Turk criteria
 	int p;
@@ -303,6 +371,15 @@ void AETrackingFilter::processImage(IplImage *origImg, IplImage *newImg, AEImage
 		{
 			cvCircle(newImg, cvPointFrom32f((*it)->_points[0][i]), 3, CV_RGB(255,0,0), -1, 8, 0);
 		}
+		
+		//Draw bounding box
+		CvPoint x0, x1;
+		CvRect bBox = (*it)->boundingBox();
+		x0.x = bBox.x;
+		x0.y = bBox.y;
+		x1.x = bBox.x + bBox.width;
+		x1.y = bBox.y + bBox.height;
+		cvRectangle(newImg, x0, x1, CV_RGB(255, 0, 255), 1, 8, 0);
 	}
 	
 	//Determine if the previous frame pyramid has been calculated
@@ -358,10 +435,18 @@ void AETrackingFilter::filterAndInitializeCandidates(IplImage *origImg, IplImage
 		CvPoint2D32f center = rectCenter(*it);
 		for(oit = _objects.begin(); oit != _objects.end(); oit++)
 		{
-			if(euclideanDistance((*oit)->center(), center) < MIN_OBJECT_DIST)
+			if(pointIsInRect(center, (*oit)->boundingBox()))
 			{
+				printf("Continuing here\n");
+				fflush(stdout);
 				doContinue = true;
 				break;
+			}
+			else
+			{
+				CvRect bBox = (*oit)->boundingBox();
+				printf("Point (%f, %f) was okay for %i x %i @ (%i, %i)\n", center.x, center.y, bBox.width, bBox.height, bBox.x, bBox.y);
+				fflush(stdout);
 			}
 		}
 		if(doContinue)

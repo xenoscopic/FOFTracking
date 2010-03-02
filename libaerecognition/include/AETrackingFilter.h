@@ -23,6 +23,7 @@ namespace Aetherspark
 				~AETrackingObject();
 				
 				CvPoint2D32f center();
+				CvRect boundingBox();
 				bool lost();
 				
 			private:
