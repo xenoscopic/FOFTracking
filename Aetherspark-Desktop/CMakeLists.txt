@@ -35,12 +35,8 @@ SET(library_MOC_HEADERS
 )
 QT4_WRAP_CPP(library_MOC_SOURCES ${library_MOC_HEADERS})
 
-#Add cascade resources
-SET(cascade_RCCS cascades.qrc)
-QT4_ADD_RESOURCES(cascade_RCC_SRCS ${cascade_RCCS})
-
 #Create tagets
-ADD_LIBRARY(aedesktop SHARED ${library_sources} ${library_MOC_SOURCES} ${cascade_RCC_SRCS})
+ADD_LIBRARY(aedesktop SHARED ${library_sources} ${library_MOC_SOURCES})
 ADD_EXECUTABLE(Aetherspark main.cpp)
 
 #Specify linkage
