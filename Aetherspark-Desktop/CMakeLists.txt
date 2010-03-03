@@ -14,6 +14,10 @@ INCLUDE_DIRECTORIES(${Aetherspark-Desktop_SOURCE_DIR}/Aetherspark-Desktop/includ
 INCLUDE_DIRECTORIES(${Aetherspark-Desktop_SOURCE_DIR}/libaecapture/include)
 INCLUDE_DIRECTORIES(${Aetherspark-Desktop_SOURCE_DIR}/libaerecognition/include)
 
+#Find Boost C++ libraries
+FIND_PACKAGE(Boost 1.40)
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+
 #Add Qt libraries/include directories
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	SET(QT_QMAKE_EXECUTABLE qmake-mac)
@@ -36,8 +40,8 @@ SET(cascade_RCCS cascades.qrc)
 QT4_ADD_RESOURCES(cascade_RCC_SRCS ${cascade_RCCS})
 
 #Create tagets
-ADD_LIBRARY(aedesktop SHARED ${library_sources} ${library_MOC_SOURCES})
-ADD_EXECUTABLE(Aetherspark main.cpp ${cascade_RCC_SRCS})
+ADD_LIBRARY(aedesktop SHARED ${library_sources} ${library_MOC_SOURCES} ${cascade_RCC_SRCS})
+ADD_EXECUTABLE(Aetherspark main.cpp)
 
 #Specify linkage
 TARGET_LINK_LIBRARIES(aedesktop aerecognition aecapture ${QT_LIBRARIES})
