@@ -18,6 +18,8 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	ADD_DEFINITIONS(-DLINUX)
 ENDIF()
 
+#FindBoost.cmake currently only searches to version 1.40
+SET(Boost_ADDITIONAL_VERSIONS "1.41" "1.41.0" "1.42" "1.42.0")
 
 #Capture library
 ADD_SUBDIRECTORY(libaecapture)
