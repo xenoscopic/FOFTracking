@@ -4,7 +4,14 @@ using namespace Aetherspark::Desktop;
 using namespace Aetherspark::Capture;
 using namespace Aetherspark::ImageProcessing;
 
+//M_PI was dropped in C99
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 //Apparently this method has been removed or renamed or something
+//on the mac and linux
+#ifndef WINDOWS
 void gluPerspective(GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble zFar)
 {
 	GLdouble xmin, xmax, ymin, ymax;
@@ -16,6 +23,7 @@ void gluPerspective(GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble zFa
 	
 	glFrustum(xmin, xmax, ymin, ymax, zNear, zFar);
 }
+#endif
 
 AEGLVideoWidget::AEGLVideoWidget(QWidget *parent) : QGLWidget(parent),
 _pipeline(NULL)

@@ -460,7 +460,6 @@ void AETrackingFilter::identifyTrackingCandidates(IplImage *origImg)
 										 cvSize(30, 30));
 	//Loop objects
 	int i;
-	bool goodCandidate;
 	for(i = 0; i < ((objects != NULL) ? objects->total : 0); i++)
 	{
 		_candidates.push_back(*((CvRect*)cvGetSeqElem(objects, i)));
