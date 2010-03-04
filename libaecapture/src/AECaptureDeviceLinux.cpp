@@ -16,6 +16,6 @@ AECaptureDevice::~AECaptureDevice()
 
 IplImage* AECaptureDevice::captureFrame()
 {
-	return cvQueryFrame(_capture);
+	return cvCloneImage(cvQueryFrame(_capture));
 }
 
