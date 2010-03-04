@@ -24,4 +24,16 @@ INCLUDE_DIRECTORIES(${OPENCV_INCLUDE_DIR})
 ADD_LIBRARY(aerecognition SHARED ${library_sources})
 
 #Set linkage
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+	#Hack until we have a working FindOpenCV.cmake for OpenCV 2.0
+	SET(OPENCV_LIBRARIES 
+		cv200 
+		cvaux200 
+		highgui200 
+		cxcore200 
+		ml200 
+		opencv_ffmpeg200 
+		cxts200
+	)
+ENDIF()
 TARGET_LINK_LIBRARIES(aerecognition ${OPENCV_LIBRARIES})

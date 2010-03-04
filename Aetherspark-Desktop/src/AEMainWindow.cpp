@@ -14,7 +14,7 @@ AEMainWindow::AEMainWindow(QWidget *parent) : QMainWindow(parent)
 	_video = new AEGLVideoWidget();
 	AEImageProcessingPipeline *pipeline = new AEImageProcessingPipeline();
 	// pipeline->addFilter(AEImagePipelineFilterRef(new AEHaarFilter("/Users/jacob/faces.xml")));
-	pipeline->addFilter(AEImagePipelineFilterRef(new AETrackingFilter("/Users/jacob/faces.xml")));
+	pipeline->addFilter(AEImagePipelineFilterRef(new AETrackingFilter("C:\\faces.xml")));
 	pipeline->addFilter(AEImagePipelineFilterRef(new AEFlipFilter(AECVFlipModeHorizontal)));
 	_video->setPipeline(pipeline);
 	
