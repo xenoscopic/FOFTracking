@@ -10,7 +10,7 @@
 
 #Set source directories
 AUX_SOURCE_DIRECTORY(src library_sources)
-INCLUDE_DIRECTORIES(${Aetherspark-Desktop_SOURCE_DIR}/libaerecognition/include)
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 #Find Boost C++ libraries
 FIND_PACKAGE(Boost 1.40)

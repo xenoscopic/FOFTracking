@@ -29,3 +29,4 @@ ADD_SUBDIRECTORY(libaerecognition)
 
 #Aetherspark-Desktop App
 ADD_SUBDIRECTORY(Aetherspark-Desktop)
+

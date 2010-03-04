@@ -10,7 +10,7 @@
 
 #Set library source directories
 AUX_SOURCE_DIRECTORY(src library_sources)
-INCLUDE_DIRECTORIES(${Aetherspark-Desktop_SOURCE_DIR}/Aetherspark-Desktop/include)
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
 INCLUDE_DIRECTORIES(${Aetherspark-Desktop_SOURCE_DIR}/libaecapture/include)
 INCLUDE_DIRECTORIES(${Aetherspark-Desktop_SOURCE_DIR}/libaerecognition/include)
 
@@ -35,11 +35,79 @@ SET(library_MOC_HEADERS
 )
 QT4_WRAP_CPP(library_MOC_SOURCES ${library_MOC_HEADERS})
 
+SET(aetherspark_SOURCES
+	main.cpp
+)
+
+#Set the App icon file if on Mac OS X
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	# set how it shows up in the Info.plist file
+	SET(MACOSX_BUNDLE_ICON_FILE Aetherspark.icns) 
+	# set where in the bundle to put the icns file
+	SET_SOURCE_FILES_PROPERTIES(${CMAKE_CURRENT_SOURCE_DIR}/Aetherspark.icns PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+	# include the icns file in the target
+	SET(aetherspark_SOURCES ${aetherspark_SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/Aetherspark.icns)
+ENDIF()
+
 #Create tagets
 ADD_LIBRARY(aedesktop SHARED ${library_sources} ${library_MOC_SOURCES})
-ADD_EXECUTABLE(Aetherspark main.cpp)
+ADD_EXECUTABLE(Aetherspark MACOSX_BUNDLE WIN32 ${aetherspark_SOURCES})
 
 #Specify linkage
 TARGET_LINK_LIBRARIES(aedesktop aerecognition aecapture ${QT_LIBRARIES})
 TARGET_LINK_LIBRARIES(Aetherspark aedesktop ${QT_LIBRARIES})
 
+#Set up installation directories
+SET(plugin_dest_dir bin)
+SET(qtconf_dest_dir bin)
+SET(APPS "\${CMAKE_INSTALL_PREFIX}/bin/Aetherspark")
+IF(APPLE)
+  SET(plugin_dest_dir Aetherspark.app/Contents/MacOS)
+  SET(qtconf_dest_dir Aetherspark.app/Contents/Resources)
+  SET(APPS "\${CMAKE_INSTALL_PREFIX}/Aetherspark.app")
+ENDIF(APPLE)
+IF(WIN32)
+  SET(APPS "\${CMAKE_INSTALL_PREFIX}/bin/Aetherspark.exe")
+ENDIF(WIN32)
+
+# Install the Aetherspark application, on Apple, the bundle is at the root of the
+# install tree, and on other platforms it'll go into the bin directory.
+INSTALL(TARGETS Aetherspark 
+	BUNDLE DESTINATION . COMPONENT Runtime
+	RUNTIME DESTINATION bin COMPONENT Runtime
+)
+
+# Install needed Qt plugins by copying directories from the qt installation
+# One can cull what gets copied by using 'REGEX "..." EXCLUDE'
+INSTALL(DIRECTORY "${QT_PLUGINS_DIR}/imageformats" DESTINATION ${plugin_dest_dir}/plugins COMPONENT Runtime)
+
+# install a qt.conf file
+# this inserts some cmake code into the install script to write the file
+INSTALL(CODE "
+    file(WRITE \"\${CMAKE_INSTALL_PREFIX}/${qtconf_dest_dir}/qt.conf\" \"\")
+    " COMPONENT Runtime)
+
+# Use BundleUtilities to get all other dependencies for the application to work.
+# It takes a bundle or executable along with possible plugins and inspects it
+# for dependencies.  If they are not system dependencies, they are copied.
+
+# directories to look for dependencies
+SET(DIRS ${QT_LIBRARY_DIRS})
+
+# Now the work of copying dependencies into the bundle/package
+# The quotes are escaped and variables to use at install time have their $ escaped
+# An alternative is the do a configure_file() on a script and use install(SCRIPT  ...).
+# Note that the image plugins depend on QtSvg and QtXml, and it got those copied
+# over.
+INSTALL(CODE "
+    file(GLOB_RECURSE QTPLUGINS
+      \"\${CMAKE_INSTALL_PREFIX}/${plugin_dest_dir}/plugins/*${CMAKE_SHARED_LIBRARY_SUFFIX}\")
+    include(BundleUtilities)
+    fixup_bundle(\"${APPS}\" \"\${QTPLUGINS}\" \"${DIRS}\")
+    " COMPONENT Runtime)
+
+# To Create a package, one can run "cpack -G DragNDrop CPackConfig.cmake" on Mac OS X
+# where CPackConfig.cmake is created by including CPack
+# And then there's ways to customize this as well
+set(CPACK_BINARY_DRAGNDROP ON)
+include(CPack)

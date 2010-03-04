@@ -23,7 +23,7 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 ENDIF()
 
 #Set include directories
-INCLUDE_DIRECTORIES(${Aetherspark-Desktop_SOURCE_DIR}/libaecapture/include)
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 #Find OpenCV libraries
 FIND_PACKAGE(OpenCV)
