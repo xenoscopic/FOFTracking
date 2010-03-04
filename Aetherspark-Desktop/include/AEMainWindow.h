@@ -1,7 +1,7 @@
 #pragma once
 
 //Comment out to use the standard pixmap-based rendering
-#define USE_OPENGL_VIDEO
+//#define USE_OPENGL_VIDEO
 
 #include <QWidget>
 #include <QMainWindow>

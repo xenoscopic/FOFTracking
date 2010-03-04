@@ -7,8 +7,10 @@
 #include <QTimer>
 
 #include <opencv/cv.h>
-#include <opencv/highgui.h> //CvCapture functions are declared here for some
-							//reason.
+
+#include "AECaptureDevice.h"
+							
+#include "AEImageProcessingPipeline.h"
 
 #include "AEDllDefines.h"
 
@@ -23,13 +25,17 @@ namespace Aetherspark
 			public:
 				AEVideoWidget(QWidget *parent = NULL);
 				~AEVideoWidget();
+
+				Aetherspark::ImageProcessing::AEImageProcessingPipeline* pipeline();
+				//Takes ownership of pipeline
+				void setPipeline(Aetherspark::ImageProcessing::AEImageProcessingPipeline *pipeline = NULL);
 			
 			public slots:
 				void updateImage();
 			
 			private:
 				//Capture source
-				CvCapture *_capture;
+				Aetherspark::Capture::AECaptureDevice *_capture;
 			
 				//Our image buffers.  They actually share the same buffer, which
 				//is really owned by QImage
@@ -42,6 +48,9 @@ namespace Aetherspark
 				
 				//Update timer
 				QTimer *_updateTimer;
+
+				//Image pipeline
+				Aetherspark::ImageProcessing::AEImageProcessingPipeline *_pipeline;
 		};
 	}
 }
