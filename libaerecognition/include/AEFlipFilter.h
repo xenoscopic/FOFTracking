@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AEImagePipelineFilter.h"
+#include "AEDllDefines.h"
 
 namespace Aetherspark
 {
@@ -14,7 +15,7 @@ namespace Aetherspark
 		
 		typedef unsigned AECVFlipMode;
 	
-		class AEFlipFilter : public AEImagePipelineFilter
+		class aerecognition_EXPORT AEFlipFilter : public AEImagePipelineFilter
 		{
 			public:
 				AEFlipFilter(AECVFlipMode mode);

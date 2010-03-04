@@ -5,13 +5,15 @@
 #include <opencv/cv.h>
 #include <boost/shared_ptr.hpp>
 
+#include "AEDllDefines.h"
+
 namespace Aetherspark
 {
 	namespace ImageProcessing
 	{
 		class AEImageProcessingPipeline;
 	
-		class AEImagePipelineFilter
+		class aerecognition_EXPORT AEImagePipelineFilter
 		{
 			public:
 				virtual void processImage(IplImage *origImg, IplImage *newImg, AEImageProcessingPipeline *pipeline) = 0;

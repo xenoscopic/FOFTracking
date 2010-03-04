@@ -10,11 +10,13 @@
 #include <opencv/highgui.h> //CvCapture functions are declared here for some
 							//reason.
 
+#include "AEDllDefines.h"
+
 namespace Aetherspark
 {
 	namespace Desktop
 	{
-		class AEVideoWidget : public QWidget
+		class aedesktop_EXPORT AEVideoWidget : public QWidget
 		{
 			Q_OBJECT
 			

@@ -3,13 +3,14 @@
 #include <vector>
 #include <stdexcept>
 
+#include "AEDllDefines.h"
 #include "AEImagePipelineFilter.h"
 
 namespace Aetherspark
 {
 	namespace ImageProcessing
 	{	
-		class AEImageProcessingPipeline
+		class aerecognition_EXPORT AEImageProcessingPipeline
 		{
 			public:
 				AEImageProcessingPipeline();

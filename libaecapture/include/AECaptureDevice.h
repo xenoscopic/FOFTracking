@@ -12,11 +12,13 @@
 							//reason.
 #endif
 
+#include "AEDllDefines.h"
+
 namespace Aetherspark
 {
 	namespace Capture
 	{
-		class AECaptureDevice
+		class aecapture_EXPORT AECaptureDevice
 		{
 			public:
 				AECaptureDevice();

@@ -6,6 +6,7 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include "AEDllDefines.h"
 #include "AEImagePipelineFilter.h"
 
 namespace Aetherspark
@@ -48,7 +49,7 @@ namespace Aetherspark
 		
 		typedef boost::shared_ptr<AETrackingObject> AETrackingObjectRef;
 		
-		class AETrackingFilter : public AEImagePipelineFilter
+		class aerecognition_EXPORT AETrackingFilter : public AEImagePipelineFilter
 		{
 			public:
 				//identFrameSkip is how many frames should be skipped between each identification

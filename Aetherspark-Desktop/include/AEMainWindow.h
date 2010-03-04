@@ -12,11 +12,13 @@
 #include "AEVideoWidget.h"
 #endif
 
+#include "AEDllDefines.h"
+
 namespace Aetherspark
 {
 	namespace Desktop
 	{
-		class AEMainWindow : public QMainWindow
+		class aedesktop_EXPORT AEMainWindow : public QMainWindow
 		{
 			public:
 				AEMainWindow(QWidget *parent = NULL);

@@ -10,6 +10,8 @@
 							
 #include "AEImageProcessingPipeline.h"
 
+#include "AEDllDefines.h"
+
 #define IMAGE_CACHE_SIZE 3
 
 namespace Aetherspark
@@ -23,7 +25,7 @@ namespace Aetherspark
 			short initialized;
 		};
 		
-		class AEGLVideoWidget : public QGLWidget
+		class aedesktop_EXPORT AEGLVideoWidget : public QGLWidget
 		{
 			Q_OBJECT
 			
