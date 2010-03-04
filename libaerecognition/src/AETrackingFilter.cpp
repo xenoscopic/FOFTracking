@@ -405,7 +405,12 @@ void AETrackingFilter::processImage(IplImage *origImg, IplImage *newImg, AEImage
 		if((*it)->lost())
 		{
 			it = _objects.erase(it);
-			it--; //This will be pointing at the element that was next, so decrement before incrementing
+			if(_objects.size() == 0)
+			{
+				break;
+			}
+			//This will be pointing at the element that was next, so decrement before incrementing.
+			it--;
 			continue;
 		}
 		
