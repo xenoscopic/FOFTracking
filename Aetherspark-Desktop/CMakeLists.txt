@@ -109,5 +109,13 @@ INSTALL(CODE "
 # To Create a package, one can run "cpack -G DragNDrop CPackConfig.cmake" on Mac OS X
 # where CPackConfig.cmake is created by including CPack
 # And then there's ways to customize this as well
-set(CPACK_BINARY_DRAGNDROP ON)
+IF(UNIX AND NOT APPLE)
+	SET(CPACK_GENERATOR "DEB")
+ENDIF()
+IF(APPLE)
+	SET(CPACK_GENERATOR "DragNDrop")
+ENDIF()
+IF(WIN32)
+	SET(CPACK_GENERATOR "NSIS")
+ENDIF()
 include(CPack)
