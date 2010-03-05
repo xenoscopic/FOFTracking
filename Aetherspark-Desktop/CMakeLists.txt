@@ -69,9 +69,10 @@ SET(plugin_dest_dir bin)
 SET(qtconf_dest_dir bin)
 SET(APPS "\${CMAKE_INSTALL_PREFIX}/bin/Aetherspark")
 IF(APPLE)
-  SET(plugin_dest_dir Aetherspark.app/Contents/MacOS)
-  SET(qtconf_dest_dir Aetherspark.app/Contents/Resources)
-  SET(APPS "\${CMAKE_INSTALL_PREFIX}/Aetherspark.app")
+	SET(plugin_dest_dir Aetherspark.app/Contents/MacOS)
+	SET(qtconf_dest_dir Aetherspark.app/Contents/Resources)
+	SET(frameworks_dest_dir Aetherspark.app/Contents/Frameworks)
+	SET(APPS "\${CMAKE_INSTALL_PREFIX}/Aetherspark.app")
 ENDIF(APPLE)
 IF(WIN32)
   SET(APPS "\${CMAKE_INSTALL_PREFIX}/bin/Aetherspark.exe")
@@ -116,6 +117,28 @@ INSTALL(CODE "
     include(BundleUtilities)
     fixup_bundle(\"${APPS}\" \"\${QTPLUGINS}\" \"${DIRS}\")
     " COMPONENT Runtime)
+
+#Copy the qt_menu.nib resource.  See these links for more info:
+#	(In order of decreasing usefulness)
+#	http://www.cmake.org/pipermail/cmake/2009-December/033743.html
+#	http://markmail.org/thread/eneuve2yoemzube7
+#	http://www.mail-archive.com/paraview@paraview.org/msg05234.html
+#	http://www.paraview.org/pipermail/paraview/2009-August/013085.html
+#
+#Apparently this not being copied is a known bug.
+#Also, the cp command doesn't seem to work properly when copying the nib (it only copies)
+#its contents (even if I don't put the trailing slash).  So instead of I have to create
+#the directory first and then copy the nib contents.  I have no idea why.
+IF(APPLE)
+INSTALL(CODE "
+	file(MAKE_DIRECTORY
+		\"\${CMAKE_INSTALL_PREFIX}/${frameworks_dest_dir}/QtGui.framework/Resources/qt_menu.nib\")
+	execute_process(COMMAND cp -R 
+		\"${QT_LIBRARY_DIR}/QtGui.framework/Resources/qt_menu.nib/\" 
+		\"\${CMAKE_INSTALL_PREFIX}/${frameworks_dest_dir}/QtGui.framework/Resources/qt_menu.nib\")
+	" COMPONENT Runtime)
+ENDIF()
+
 
 # To Create a package, one can run "cpack -G DragNDrop CPackConfig.cmake" on Mac OS X
 # where CPackConfig.cmake is created by including CPack
