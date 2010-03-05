@@ -21,6 +21,9 @@ ENDIF()
 #FindBoost.cmake currently only searches to version 1.40
 SET(Boost_ADDITIONAL_VERSIONS "1.41" "1.41.0" "1.42" "1.42.0")
 
+#Tell CMake to put all libraries in build/lib
+SET(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
+
 #Capture library
 ADD_SUBDIRECTORY(libaecapture)
 

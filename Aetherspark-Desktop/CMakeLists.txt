@@ -11,8 +11,8 @@
 #Set library source directories
 AUX_SOURCE_DIRECTORY(src library_sources)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
-INCLUDE_DIRECTORIES(${Aetherspark-Desktop_SOURCE_DIR}/libaecapture/include)
-INCLUDE_DIRECTORIES(${Aetherspark-Desktop_SOURCE_DIR}/libaerecognition/include)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/libaecapture/include)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/libaerecognition/include)
 
 #Find Boost C++ libraries
 FIND_PACKAGE(Boost 1.40)
@@ -99,7 +99,11 @@ INSTALL(CODE "
 # for dependencies.  If they are not system dependencies, they are copied.
 
 # directories to look for dependencies
-SET(DIRS ${QT_LIBRARY_DIRS})
+SET(DIRS
+	${QT_LIBRARY_DIRS}
+	"/usr/local/lib"
+	${CMAKE_BINARY_DIR}/lib
+)
 
 # Now the work of copying dependencies into the bundle/package
 # The quotes are escaped and variables to use at install time have their $ escaped
