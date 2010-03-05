@@ -22,6 +22,13 @@ INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	SET(QT_QMAKE_EXECUTABLE qmake-mac)
 ENDIF()
+
+#If we're on Windows, we need Qt to build the
+#winmain@16 call.  This will be provided in qtmain.lib.
+IF(WIN32)
+	SET(QT_USE_QTMAIN TRUE)
+ENDIF()
+
 FIND_PACKAGE(Qt4 REQUIRED)
 SET(QT_USE_QTOPENGL TRUE) #Needed for QGLWidget
 INCLUDE(${QT_USE_FILE})
