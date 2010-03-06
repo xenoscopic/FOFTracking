@@ -23,6 +23,14 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	SET(QT_QMAKE_EXECUTABLE qmake-mac)
 ENDIF()
 
+#If we're on the Mac, we need CoreFoundation to manage
+#bundle resources
+IF(APPLE)
+	FIND_LIBRARY(COREFOUNDATION_LIBRARY CoreFoundation)
+ELSE()
+	SET(COREFOUNDATION_LIBRARY)
+ENDIF()
+
 #If we're on Windows, we need Qt to build the
 #winmain@16 call.  This will be provided in qtmain.lib.
 IF(WIN32)
@@ -61,7 +69,7 @@ ADD_LIBRARY(aedesktop SHARED ${library_sources} ${library_MOC_SOURCES})
 ADD_EXECUTABLE(Aetherspark MACOSX_BUNDLE WIN32 ${aetherspark_SOURCES})
 
 #Specify linkage
-TARGET_LINK_LIBRARIES(aedesktop aerecognition aecapture ${QT_LIBRARIES})
+TARGET_LINK_LIBRARIES(aedesktop aerecognition aecapture ${QT_LIBRARIES} ${COREFOUNDATION_LIBRARY})
 TARGET_LINK_LIBRARIES(Aetherspark aedesktop ${QT_LIBRARIES})
 
 #Set up installation directories
@@ -72,6 +80,7 @@ IF(APPLE)
 	SET(plugin_dest_dir Aetherspark.app/Contents/MacOS)
 	SET(qtconf_dest_dir Aetherspark.app/Contents/Resources)
 	SET(frameworks_dest_dir Aetherspark.app/Contents/Frameworks)
+	SET(cascades_dest_dir Aetherspark.app/Contents/Resources/Cascades)
 	SET(APPS "\${CMAKE_INSTALL_PREFIX}/Aetherspark.app")
 ENDIF(APPLE)
 IF(WIN32)
@@ -139,6 +148,16 @@ INSTALL(CODE "
 	" COMPONENT Runtime)
 ENDIF()
 
+#Copy all cascades into the resources directory
+IF(APPLE)
+INSTALL(CODE "
+	file(MAKE_DIRECTORY
+		\"\${CMAKE_INSTALL_PREFIX}/${cascades_dest_dir}\")
+	execute_process(COMMAND cp -R
+		\"${CMAKE_CURRENT_SOURCE_DIR}/cascades/\" 
+		\"\${CMAKE_INSTALL_PREFIX}/${cascades_dest_dir}\")
+	" COMPONENT Runtime)
+ENDIF()
 
 # To Create a package, one can run "cpack -G DragNDrop CPackConfig.cmake" on Mac OS X
 # where CPackConfig.cmake is created by including CPack
