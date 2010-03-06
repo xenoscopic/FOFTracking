@@ -113,6 +113,9 @@ SET(DIRS
 	${QT_LIBRARY_DIRS}
 	"/usr/local/lib"
 	${CMAKE_BINARY_DIR}/lib
+	${CMAKE_BINARY_DIR}/lib/Debug
+	${CMAKE_BINARY_DIR}/lib/Release
+	C:/Windows/System32
 )
 
 # Now the work of copying dependencies into the bundle/package
