@@ -3,9 +3,13 @@
 #include <cstdio>
 #include <cmath>
 #include <algorithm>
+#include <cstring> //For memset
+
+#include "AEDualSort.h"
 
 using namespace std;
 using namespace Aetherspark::ImageProcessing;
+using namespace Aetherspark::Utility;
 
 //Number of features to track
 #define N_FEATURE_TRACK 55
@@ -172,7 +176,9 @@ void AETrackingObject::fillGoodFeatures(IplImage *orig, IplImage *grey, CvRect r
 	
 	//Use color histogram to sort point rank.
 	//Do this BEFORE adjusting for ROI, since hueImage
-	//will just be of ROI.
+	//will just be of ROI.  Don't need to worry about 
+	//resorting _frameCounts here because these will
+	//all just be assigned a framecount of 0.
 	HistogramSorter hSorter(backProjection);
 	sort(_points[0], _points[0] + tempCount, hSorter);
 	
@@ -209,15 +215,22 @@ void AETrackingObject::fillGoodFeatures(IplImage *orig, IplImage *grey, CvRect r
 				continue;
 			}
 			//Looks good, add the point.
-			_points[1][_count++] = _points[0][i++];
+			_points[1][_count] = _points[0][i++];
+			_frameCounts[_count] = 0;
+			_count++;
 		}
 		//Resort based on quality so that future removes
-		//will take it into account
-		sort(_points[1], _points[1] + _count, hSorter);
+		//will take it into account.  We use dual sort
+		//because we also need to sort _frameCounts.
+		dual_sort<CvPoint2D32f*, unsigned*, CvPoint2D32f, unsigned, HistogramSorter>
+			(_points[1], _points[1] + _count, _frameCounts, _frameCounts + _count, hSorter);
+		// sort(_points[1], _points[1] + _count, hSorter);
 	}
 	else
 	{
 		_count = min(N_FEATURE_TRACK, tempCount);
+		//Make all framecounts 0
+		memset((void*)_frameCounts, 0, N_FEATURE_TRACK*sizeof(unsigned));
 	}
 	
 	//Free up memory
@@ -256,20 +269,28 @@ void AETrackingObject::calculateMovement(IplImage *orig, IplImage *grey, IplImag
 			continue;
 		}
 		
-		_points[1][k++] = _points[1][i];
+		_points[1][k] = _points[1][i];
+		_frameCounts[k] = _frameCounts[i] + 1;
+		k++;
 	}
 	_count = k;
 	
-	//Calculate the center of the features
-	_center.x = 0.0;
-	_center.y = 0.0;
+	//Calculate the center of the features, weighted based on
+	//how long points have been around for.
+	double frameSum = 0.0;
 	for(i = 0; i < _count; i++)
 	{
-		_center.x += _points[1][i].x;
-		_center.y += _points[1][i].y;
+		frameSum += _frameCounts[i];
 	}
-	_center.x /= _count;
-	_center.y /= _count;
+	_center.x = 0.0;
+	_center.y = 0.0;
+	double ptWeight;
+	for(i = 0; i < _count; i++)
+	{
+		ptWeight = (double)_frameCounts[i]/frameSum;
+		_center.x += _points[1][i].x*ptWeight;
+		_center.y += _points[1][i].y*ptWeight;
+	}
 	
 	//Relocate the bounding box to center it on the median feature
 	_boundingBox.x = _center.x - (float)_boundingBox.width/2;
@@ -336,7 +357,7 @@ _initialized(false)
 											   0);
 	if(_cascade == NULL)
 	{
-		throw out_of_range("Specified cascade file is invalid.");
+		throw invalid_argument("Specified cascade file is invalid.");
 	}
 
 	//Create storage
@@ -351,7 +372,6 @@ AETrackingFilter::~AETrackingFilter()
 	}
 
 	//No need to check if cascade is null
-	//TODO: Check that I am calling this function correctly
 	cvRelease((void**)&_cascade);
 	
 	if(_initialized)
