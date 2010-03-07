@@ -91,9 +91,10 @@ _lost(false)
 	fflush(stdout);
 	
 	//Allocate our point buffers
-	_points[0] = (CvPoint2D32f*)cvAlloc(N_FEATURE_TRACK*K_FOF*sizeof(CvPoint2D32f));
-	_points[1] = (CvPoint2D32f*)cvAlloc(N_FEATURE_TRACK*K_FOF*sizeof(CvPoint2D32f));
-	_status = (char*)cvAlloc(N_FEATURE_TRACK*K_FOF*sizeof(char));
+	_points[0] = new CvPoint2D32f[N_FEATURE_TRACK*K_FOF];
+	_points[1] = new CvPoint2D32f[N_FEATURE_TRACK*K_FOF];
+	_status = new char[N_FEATURE_TRACK*K_FOF];
+	_frameCounts = new unsigned[N_FEATURE_TRACK];
 	
 	//Create an empty hue histogram
 	int numBins = 256;
@@ -107,10 +108,11 @@ _lost(false)
 AETrackingObject::~AETrackingObject()
 {
 	//Deallocate point buffers
-	cvFree((void**)(&(_points[0])));
-	cvFree((void**)(&(_points[1])));
-	cvFree((void**)(&_status));
-	
+	delete [] _points[0];
+	delete [] _points[1];
+	delete [] _status;
+	delete [] _frameCounts;
+
 	//Release histogram
 	cvReleaseHist(&_hist);
 }
