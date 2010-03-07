@@ -52,7 +52,7 @@ namespace Aetherspark
 
 		//Unfortunately we have to specify content types because we have to make a copy buffer.  Moving
 		//data in-place would be O(n log n) at minimum, if not more.
-		template <class RandomAccessIteratorType1, class RandomAccessIteratorType2, class Type1, class Type2, class Compare>
+		template <class RandomAccessIteratorType1, class RandomAccessIteratorType2, class Compare>
 		void dual_sort(RandomAccessIteratorType1 it1_begin, 
 						RandomAccessIteratorType1 it1_end, 
 						RandomAccessIteratorType2 it2_begin, 
@@ -94,17 +94,17 @@ namespace Aetherspark
 													RandomAccessIteratorType1 >(comp));
 
 			//Order vectors appropriately
-			std::vector<Type1> copyBuffer1(n1);
-			std::vector<Type2> copyBuffer2(n2);
+			std::vector<typename std::iterator_traits<RandomAccessIteratorType1>::value_type > copyBuffer1(n1);
+			std::vector<typename std::iterator_traits<RandomAccessIteratorType2>::value_type > copyBuffer2(n2);
 			
 			index_shuffle_copy<typename std::vector<std::pair<size_t, RandomAccessIteratorType1> >::iterator, 
 								RandomAccessIteratorType1, 
-								typename std::vector<Type1>::iterator>
+								typename std::vector<typename std::iterator_traits<RandomAccessIteratorType1>::value_type >::iterator>
 								(order.begin(), order.end(), it1_begin, copyBuffer1.begin());
 								
 			index_shuffle_copy<typename std::vector<std::pair<size_t, RandomAccessIteratorType1> >::iterator, 
 								RandomAccessIteratorType2, 
-								typename std::vector<Type2>::iterator>
+								typename std::vector<typename std::iterator_traits<RandomAccessIteratorType2>::value_type >::iterator>
 								(order.begin(), order.end(), it2_begin, copyBuffer2.begin());
 								
 			std::copy(copyBuffer1.begin(), copyBuffer1.end(), it1_begin);

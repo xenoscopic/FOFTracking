@@ -222,8 +222,11 @@ void AETrackingObject::fillGoodFeatures(IplImage *orig, IplImage *grey, CvRect r
 		//Resort based on quality so that future removes
 		//will take it into account.  We use dual sort
 		//because we also need to sort _frameCounts accordingly.
-		dual_sort<CvPoint2D32f*, unsigned*, CvPoint2D32f, unsigned, HistogramSorter>
-			(_points[1], _points[1] + _count, _frameCounts, _frameCounts + _count, hSorter);
+		dual_sort(_points[1], 
+					_points[1] + _count,
+					_frameCounts,
+					_frameCounts + _count, 
+					hSorter);
 	}
 	else
 	{
