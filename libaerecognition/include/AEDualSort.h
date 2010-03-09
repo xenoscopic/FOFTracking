@@ -50,7 +50,7 @@ namespace Aetherspark
 			}
 		}
 
-		//Unfortunately we have to specify content types because we have to make a copy buffer.  Moving
+		//Unfortunately we have to make a copy buffer.  Moving
 		//data in-place would be O(n log n) at minimum, if not more.
 		template <class RandomAccessIteratorType1, class RandomAccessIteratorType2, class Compare>
 		void dual_sort(RandomAccessIteratorType1 it1_begin, 
@@ -79,7 +79,8 @@ namespace Aetherspark
 				throw std::invalid_argument("Containers have different sizes.");
 			}
 
-			//Create a tracker
+			//Create a tracker with indices 0, n1-1 that we can use to see how the
+			//order of the data changed.
 			std::vector<std::pair<size_t, RandomAccessIteratorType1> > order(n1);
 			size_t n = 0;
 			for(RandomAccessIteratorType1 it = it1_begin; it != it1_end; it++, n++)
@@ -97,28 +98,20 @@ namespace Aetherspark
 			std::vector<typename std::iterator_traits<RandomAccessIteratorType1>::value_type > copyBuffer1(n1);
 			std::vector<typename std::iterator_traits<RandomAccessIteratorType2>::value_type > copyBuffer2(n2);
 			
-			index_shuffle_copy<typename std::vector<std::pair<size_t, RandomAccessIteratorType1> >::iterator, 
-								RandomAccessIteratorType1, 
-								typename std::vector<typename std::iterator_traits<RandomAccessIteratorType1>::value_type >::iterator>
-								(order.begin(), order.end(), it1_begin, copyBuffer1.begin());
-								
-			index_shuffle_copy<typename std::vector<std::pair<size_t, RandomAccessIteratorType1> >::iterator, 
-								RandomAccessIteratorType2, 
-								typename std::vector<typename std::iterator_traits<RandomAccessIteratorType2>::value_type >::iterator>
-								(order.begin(), order.end(), it2_begin, copyBuffer2.begin());
+			index_shuffle_copy(order.begin(), order.end(), it1_begin, copyBuffer1.begin());	
+			index_shuffle_copy(order.begin(), order.end(), it2_begin, copyBuffer2.begin());
 								
 			std::copy(copyBuffer1.begin(), copyBuffer1.end(), it1_begin);
 			std::copy(copyBuffer2.begin(), copyBuffer2.end(), it2_begin);
 		}
 
-		template <class RandomAccessIteratorType1, class RandomAccessIteratorType2, class Type1, class Type2>
+		template <class RandomAccessIteratorType1, class RandomAccessIteratorType2>
 		void dual_sort(RandomAccessIteratorType1 it1_begin, 
 						RandomAccessIteratorType1 it1_end, 
 						RandomAccessIteratorType2 it2_begin, 
 						RandomAccessIteratorType2 it2_end)
 		{
-			dual_sort<RandomAccessIteratorType1, RandomAccessIteratorType2, Type1, Type2, dual_sort_basic_compare<RandomAccessIteratorType1> >
-				(it1_begin, it1_end, it2_begin, it2_end, dual_sort_basic_compare<RandomAccessIteratorType1>());
+			dual_sort(it1_begin, it1_end, it2_begin, it2_end, dual_sort_basic_compare<typename std::iterator_traits<RandomAccessIteratorType1>::value_type>());
 		}
 	}
 }
