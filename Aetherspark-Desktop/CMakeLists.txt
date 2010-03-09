@@ -153,13 +153,16 @@ ENDIF()
 
 #Copy all cascades into the resources directory
 IF(APPLE)
-INSTALL(CODE "
-	file(MAKE_DIRECTORY
-		\"\${CMAKE_INSTALL_PREFIX}/${cascades_dest_dir}\")
-	execute_process(COMMAND cp -R
-		\"${CMAKE_CURRENT_SOURCE_DIR}/cascades/\" 
-		\"\${CMAKE_INSTALL_PREFIX}/${cascades_dest_dir}\")
-	" COMPONENT Runtime)
+ADD_CUSTOM_COMMAND(
+	TARGET Aetherspark
+	POST_BUILD
+	COMMAND mkdir ARGS ${CMAKE_CURRENT_BINARY_DIR}/${cascades_dest_dir}
+)
+ADD_CUSTOM_COMMAND(
+	TARGET Aetherspark
+	POST_BUILD
+	COMMAND cp ARGS ${CMAKE_CURRENT_SOURCE_DIR}/cascades/*.xml ${CMAKE_CURRENT_BINARY_DIR}/${cascades_dest_dir}
+)
 ENDIF()
 
 # To Create a package, one can run "cpack -G DragNDrop CPackConfig.cmake" on Mac OS X
