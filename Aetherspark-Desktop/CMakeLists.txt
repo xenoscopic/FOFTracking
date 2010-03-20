@@ -153,11 +153,13 @@ ENDIF()
 
 #Copy all cascades into the resources directory
 IF(APPLE)
-ADD_CUSTOM_COMMAND(
-	TARGET Aetherspark
-	POST_BUILD
-	COMMAND mkdir ARGS ${CMAKE_CURRENT_BINARY_DIR}/${cascades_dest_dir}
-)
+	IF(NOT IS_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${cascades_dest_dir})
+		ADD_CUSTOM_COMMAND(
+			TARGET Aetherspark
+			POST_BUILD
+			COMMAND mkdir ARGS ${CMAKE_CURRENT_BINARY_DIR}/${cascades_dest_dir}
+		)
+	ENDIF()
 ADD_CUSTOM_COMMAND(
 	TARGET Aetherspark
 	POST_BUILD
