@@ -1,0 +1,1 @@
+opencv_haartraining -data five-cascade -vec five-train-samples.vec -bg negatives.dat -nstages 20 -nsplits 2 -minhitrate 0.999 -maxfalsealarm 0.5 -npos 7000 -nneg 3007 -w 20 -h 20 -nonsym -mem 2048 -mode ALL
