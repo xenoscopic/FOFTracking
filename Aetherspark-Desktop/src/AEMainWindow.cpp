@@ -42,7 +42,7 @@ AEMainWindow::AEMainWindow(QWidget *parent) : QMainWindow(parent)
 													kCFURLPOSIXPathStyle);
 	const char *pathPtr = CFStringGetCStringPtr(macPath,
 												CFStringGetSystemEncoding());
-	string cascadePath = string(pathPtr) + "/Contents/Resources/Cascades/five-cascade.xml";
+	string cascadePath = string(pathPtr) + "/Contents/Resources/Cascades/faces.xml";
 	CFRelease(appUrlRef);
 	CFRelease(macPath);
 	#endif

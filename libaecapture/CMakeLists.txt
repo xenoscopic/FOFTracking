@@ -26,27 +26,10 @@ ENDIF()
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 #Find OpenCV libraries
-FIND_PACKAGE(OpenCV)
-INCLUDE_DIRECTORIES(${OPENCV_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
 
 #Create tagets
 ADD_LIBRARY(aecapture SHARED ${library_sources})
 
 #Set linkage
-IF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-	#Hack until we have a working FindOpenCV.cmake for OpenCV 2.0
-	SET(OPENCV_LIBRARIES 
-		cv200 
-		cvaux200 
-		highgui200 
-		cxcore200 
-		ml200 
-		opencv_ffmpeg200 
-		cxts200
-	)
-ENDIF()
-IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-	TARGET_LINK_LIBRARIES(aecapture ${OPENCV_LIBRARIES})
-ELSE()
-	TARGET_LINK_LIBRARIES(aecapture ${OPENCV_LIBRARIES})
-ENDIF()
+TARGET_LINK_LIBRARIES(aecapture ${OpenCV_LIBS})

@@ -15,13 +15,12 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/libaecapture/include)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/libaerecognition/include)
 
 #Find Boost C++ libraries
-FIND_PACKAGE(Boost 1.40)
+FIND_PACKAGE(Boost REQUIRED)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
-#Add Qt libraries/include directories
-IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-	SET(QT_QMAKE_EXECUTABLE qmake-mac)
-ENDIF()
+#Find OpenGL
+FIND_PACKAGE(OpenGL REQUIRED)
+INCLUDE_DIRECTORIES(${OPENGL_INCLUDE_DIR})
 
 #If we're on the Mac, we need CoreFoundation to manage
 #bundle resources
@@ -69,7 +68,7 @@ ADD_LIBRARY(aedesktop SHARED ${library_sources} ${library_MOC_SOURCES})
 ADD_EXECUTABLE(Aetherspark MACOSX_BUNDLE WIN32 ${aetherspark_SOURCES})
 
 #Specify linkage
-TARGET_LINK_LIBRARIES(aedesktop aerecognition aecapture ${QT_LIBRARIES} ${COREFOUNDATION_LIBRARY})
+TARGET_LINK_LIBRARIES(aedesktop aerecognition aecapture ${QT_LIBRARIES} ${COREFOUNDATION_LIBRARY} ${OPENGL_LIBRARIES})
 TARGET_LINK_LIBRARIES(Aetherspark aedesktop ${QT_LIBRARIES})
 
 #Set up installation directories
